@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bundled Delivery: Cost vs Promise</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ink:#16201b; --ink-2:#4a5a4f; --ink-3:#77887c;
+  --bg:#f7f9f6; --surface:#ffffff; --surface-2:#eef3ec; --line:#d9e3d8;
+  --brand:#14432A; --accent:#b96c06;
+  --k1:#9aa69d; --k2:#2a78d6; --k3:#1baf7a; --k4:#eb6834; --base:#4a5a4f;
+  --narrow:#2a78d6; --wide:#b96c06;
+  --grid:#e3ebe1;
+  --font-display:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --font-body:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root{
+  --ink:#eef2ec; --ink-2:#b4c2b6; --ink-3:#8b9a8d;
+  --bg:#141814; --surface:#1c211c; --surface-2:#232a23; --line:#333d33;
+  --brand:#9ec3a8; --accent:#e8a33f;
+  --k1:#7d887f; --k2:#3987e5; --k3:#199e70; --k4:#d95926; --base:#b4c2b6;
+  --narrow:#3987e5; --wide:#e8a33f;
+  --grid:#2c352c; color-scheme:dark;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);
+     font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1060px;margin:0 auto;padding:34px 20px 56px;display:flex;flex-direction:column;gap:26px}
+h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0}
+.eyebrow{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600}
+h1{font-size:clamp(28px,4.4vw,40px);font-weight:700;line-height:1.14;letter-spacing:-.015em;margin-top:8px;color:var(--brand)}
+.lede{font-size:17px;color:var(--ink-2);max-width:66ch;margin-top:10px}
+.meta{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-3);margin-top:14px;display:flex;flex-wrap:wrap;gap:6px 18px}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 16px 14px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.tile.hero{background:var(--brand);border-color:var(--brand)}
+.tile .k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.tile.hero .k{color:#bcd4c2}
+.tile .v{font-family:var(--font-display);font-size:30px;font-weight:700;line-height:1.05;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.tile.hero .v{color:#fff}
+.tile .n{font-size:12.5px;color:var(--ink-3);line-height:1.35}
+.tile.hero .n{color:#a9c4b0}
+@media (prefers-color-scheme:dark){.tile.hero{background:#1f3a29;border-color:#2c5038}}
+section{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px}
+section > h2,.chart-head h2{font-size:19px;font-weight:600;letter-spacing:-.01em}
+.sub{font-size:13.5px;color:var(--ink-3);margin-top:4px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));margin-top:16px;border-top:1px solid var(--line)}
+.fact{border-bottom:1px solid var(--line);padding:11px 22px 11px 0;display:flex;gap:12px;align-items:baseline}
+.fact b{font-family:var(--font-mono);font-size:13px;color:var(--accent);flex:0 0 auto;min-width:88px;font-weight:500}
+.fact span{font-size:13.5px;color:var(--ink-2)}
+.chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:14px;flex-wrap:wrap}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2)}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.legend i.dash{height:0;border-top:2px dashed var(--base);border-radius:0;width:16px;vertical-align:3px}
+.plot{width:100%;overflow-x:auto;margin-top:6px}
+svg{display:block;width:100%;height:auto;max-width:100%}
+.ax{font-family:var(--font-mono);font-size:10.5px;fill:var(--ink-3)}
+.axl{font-size:11.5px;fill:var(--ink-3);font-weight:500;font-family:var(--font-body)}
+.dlab{font-family:var(--font-mono);font-size:10.5px;font-weight:500}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:860px){.two{grid-template-columns:1fr}.tiles{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:460px){.tiles{grid-template-columns:1fr}}
+.tip{position:fixed;pointer-events:none;opacity:0;transition:opacity .12s;background:var(--brand);color:#fff;border-radius:8px;padding:8px 11px;font-size:12.5px;font-family:var(--font-mono);line-height:1.5;z-index:20;max-width:250px;box-shadow:0 6px 20px rgba(0,0,0,.22)}
+@media (prefers-color-scheme:dark){.tip{background:#2c5038}}
+.tip b{color:#f0c686;font-weight:500}
+ol.find{list-style:none;counter-reset:f;padding:0;margin:14px 0 0;display:flex;flex-direction:column;gap:14px}
+ol.find li{counter-increment:f;display:flex;gap:14px}
+ol.find li::before{content:counter(f);font-family:var(--font-display);font-weight:700;font-size:13px;color:#fff;background:var(--accent);min-width:24px;height:24px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;margin-top:2px}
+ol.find h3{font-size:15.5px;font-weight:600;margin-bottom:3px}
+ol.find p{margin:0;font-size:14px;color:var(--ink-2)}
+ul.plain{margin:14px 0 0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+ul.plain li{display:flex;gap:10px;font-size:14px;color:var(--ink-2)}
+ul.plain li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-top:8px}
+table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;font-family:var(--font-mono)}
+.tbl{overflow-x:auto;margin-top:14px}
+th,td{text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-family:var(--font-body);font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);font-weight:600;border-bottom:1px solid var(--ink-3)}
+th:first-child,td:first-child{text-align:left}
+tr.mark td{background:var(--surface-2);font-weight:500}
+tr.base td{color:var(--ink-3)}
+caption{caption-side:bottom;text-align:left;font-family:var(--font-body);font-size:12.5px;color:var(--ink-3);padding-top:10px}
+footer{font-size:12.5px;color:var(--ink-3);border-top:1px solid var(--line);padding-top:16px}
+footer a,.src a{color:var(--ink-2);text-decoration-color:var(--line)}
+.src{font-size:12.5px;color:var(--ink-3);margin-top:14px;line-height:1.7}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Logistics Innovation Theory · Team project</div>
+    <h1>How much does bundling cut delivery cost — and who pays for it in waiting time?</h1>
+    <p class="lede">Korean delivery apps now sell two products for the same meal: 한집배달, where one rider
+      carries one order straight to you, and a cheaper bundled tier (배민 알뜰배달, 쿠팡이츠 세이브배달).
+      We asked a narrow version of the question this raises: for the same 100 orders, how much operating
+      cost does bundling save as we raise the maximum bundle size and the delivery promise — and what
+      happens to delivery time?</p>
+    <div class="meta">
+      <span>instance STAGE1_2 · K = 100 orders</span>
+      <span>course bundling algorithm + Gurobi selection</span>
+      <span>35 main scenarios · max bundle 1–4 × slack 15–45 min</span>
+      <span>+ 20 cost-structure runs · + 100 cross-instance runs</span>
+    </div>
+  </header>
+
+  <div class="tiles">
+    <div class="tile hero">
+      <div class="k">Headline</div>
+      <div class="v">−57.2%</div>
+      <div class="n">cost per order with bundles of up to 4, against one car per order — 7,244 → 3,099 won at the original 30-min slack</div>
+    </div>
+    <div class="tile">
+      <div class="k">Pairs do most of it</div>
+      <div class="v">68–84%</div>
+      <div class="n">of the total bundling saving comes from allowing just 2-order bundles</div>
+    </div>
+    <div class="tile">
+      <div class="k">Slowest 10% wait</div>
+      <div class="v">+1.6 vs +21.5</div>
+      <div class="n">minutes: bundles 2→4 at a fixed promise, versus promise 15→45 min at max 4</div>
+    </div>
+    <div class="tile">
+      <div class="k">Baseline</div>
+      <div class="v">7,244</div>
+      <div class="n">won per order · one car per order, no bundling — the plan we must beat</div>
+    </div>
+  </div>
+
+  <section>
+    <h2>Why we asked this</h2>
+    <p class="sub">The two-tier product is real, and so is the trade-off customers are told about: cheaper, but slower.</p>
+    <div class="facts">
+      <div class="fact"><b>Apr 2023</b><span>배민 launches 알뜰배달: orders on similar routes are bundled; 한집배달 keeps one rider per order</span></div>
+      <div class="fact"><b>6,000 → 1,820</b><span>won: 한집배달 delivery fee vs average 알뜰배달 fee paid by customers (June 2023) — about one third</span></div>
+      <div class="fact"><b>max 3</b><span>orders a rider could accept at once on 알뜰배달, per an industry official (2023)</span></div>
+      <div class="fact"><b>Jul 2023</b><span>Restaurant owners report bundled orders arriving late; slower delivery is the stated price of the discount</span></div>
+      <div class="fact"><b>Mar–Apr 2024</b><span>쿠팡이츠 and 배민 make the <em>bundled</em> tier free in major areas; single-order delivery stays paid</span></div>
+      <div class="fact"><b>Mar 2026</b><span>배민 raises 한집배달 tips by distance (+500 to +1,500 won) in a trial — the price gap keeps moving</span></div>
+    </div>
+    <p class="src">What we test: bundling lowers the operating cost of serving the same orders, and the size of that saving depends on
+      (a) how many orders a rider may carry and (b) how much later than a direct trip the customer is promised the food.
+      We model the operation, not the price: the fee gap is set by promotions and strategy as well as by cost.</p>
+  </section>
+
+  <section>
+    <div class="chart-head">
+      <div>
+        <h2>Cost per order as bundles grow and the promise loosens</h2>
+        <p class="sub">Same 100 orders. Slack = minutes the customer may wait beyond a direct car trip after the food is ready. 30 min is the original data.</p>
+      </div>
+      <div class="legend">
+        <span><i style="background:var(--k1)"></i>Max 1 (no bundling)</span>
+        <span><i style="background:var(--k2)"></i>Max 2</span>
+        <span><i style="background:var(--k3)"></i>Max 3</span>
+        <span><i style="background:var(--k4)"></i>Max 4</span>
+        <span><i class="dash"></i>One car per order</span>
+      </div>
+    </div>
+    <div class="plot"><svg id="c1" viewBox="0 0 760 340" role="img"
+      aria-label="Without bundling cost stays near 7,240 won per order. Allowing pairs drops it to about 4,300; allowing 3 and 4 orders drops it further, more so as slack grows, reaching 2,809 won at 45 minutes."></svg></div>
+  </section>
+
+  <div class="two">
+    <section>
+      <div class="chart-head">
+        <div><h2>What each extra order in a bundle buys</h2>
+        <p class="sub">Extra saving from raising the cap one step, by slack.</p></div>
+        <div class="legend">
+          <span><i style="background:var(--k2)"></i>1→2</span>
+          <span><i style="background:var(--k3)"></i>2→3</span>
+          <span><i style="background:var(--k4)"></i>3→4</span>
+        </div>
+      </div>
+      <div class="plot"><svg id="c2" viewBox="0 0 420 300" role="img"
+        aria-label="The 1 to 2 step saves 37 to 42 percent at every slack. The 3 to 4 step saves 0.1 percent at 15 minutes and 14 percent at 45 minutes."></svg></div>
+    </section>
+    <section>
+      <div class="chart-head">
+        <div><h2>The promise sets the wait</h2>
+        <p class="sub">Average delivery time of the slowest 10% of orders.</p></div>
+        <div class="legend">
+          <span><i style="background:var(--k1)"></i>Max 1</span>
+          <span><i style="background:var(--k2)"></i>Max 2</span>
+          <span><i style="background:var(--k3)"></i>Max 3</span>
+          <span><i style="background:var(--k4)"></i>Max 4</span>
+        </div>
+      </div>
+      <div class="plot"><svg id="c3" viewBox="0 0 420 300" role="img"
+        aria-label="For bundled plans the slowest-10 percent time rises from about 47 minutes at 15 minutes slack to about 69 to 72 minutes at 45 minutes; the lines for 2, 3 and 4 orders stay close together."></svg></div>
+    </section>
+  </div>
+
+  <div class="two">
+    <section>
+      <div class="chart-head">
+        <div><h2>Same pattern in other data, different size</h2>
+        <p class="sub">Saving vs no bundling, max 4 — four 100-order instances.</p></div>
+        <div class="legend">
+          <span><i style="background:var(--narrow)"></i>Dense (~7×9 km)</span>
+          <span><i style="background:var(--wide)"></i>Spread (~16×24 km)</span>
+        </div>
+      </div>
+      <div class="plot"><svg id="c4" viewBox="0 0 420 300" role="img"
+        aria-label="Dense instances save 44 to 60 percent; spread-out instances save 31 to 47 percent; all rise with slack."></svg></div>
+    </section>
+    <section>
+      <div class="chart-head">
+        <div><h2>Does it depend on rider fixed cost?</h2>
+        <p class="sub">Saving vs no bundling at 30-min slack, four cost structures from the course data.</p></div>
+        <div class="legend">
+          <span><i style="background:var(--k2)"></i>Max 2</span>
+          <span><i style="background:var(--k3)"></i>Max 3</span>
+          <span><i style="background:var(--k4)"></i>Max 4</span>
+        </div>
+      </div>
+      <div class="plot"><svg id="c5" viewBox="0 0 420 300" role="img"
+        aria-label="With bundles up to 4, savings are 57 to 60 percent for three cost structures and 50 percent when walking is the cheapest rider."></svg></div>
+    </section>
+  </div>
+
+  <section>
+    <h2>What we found</h2>
+    <ol class="find">
+      <li><div>
+        <h3>Pairs do most of the work</h3>
+        <p>Allowing 2-order bundles cuts cost per order by 37–42% at every slack we tried, which is 68–84% of everything
+          bundling achieves. Riders fall from 100 to about 50. The saving is almost entirely rider fixed cost: choosing cheaper
+          vehicle types without bundling saves only 0–0.2% here.</p>
+      </div></li>
+      <li><div>
+        <h3>Bigger bundles pay only when the promise is loose</h3>
+        <p>Going from 3 to 4 orders adds 0.1% at 15 min of slack, 8.5% at the original 30 min and 14.2% at 45 min. With a tight
+          promise there are almost no feasible 4-order routes. The real 알뜰배달 cap of 3 orders sits where the extra saving is small
+          unless the promise is generous.</p>
+      </div></li>
+      <li><div>
+        <h3>The wait is set by the promise, not the bundle size</h3>
+        <p>At a fixed 30-min slack, growing bundles from 2 to 4 adds 1.6 min to the slowest 10% of orders. At a fixed cap of 4,
+          stretching the promise from 15 to 45 min adds 21.5 min. Each extra minute of waiting buys less: about 110 won per order
+          between 15 and 20 min of slack, 20–30 won beyond 35 min. A cost-minimising dispatcher uses whatever slack it is given.</p>
+      </div></li>
+      <li><div>
+        <h3>The direction holds; the size depends on density</h3>
+        <p>In four 100-order instances the pattern repeats, but dense areas (~7×9 km) save 44–60% while spread-out areas
+          (~16×24 km) save 31–47%, and 3→4 adds at most 4.4% there. Across four rider cost structures the saving stays at 50–60%;
+          it is smallest when walking, the slowest and smallest vehicle, is the cheapest to dispatch.</p>
+      </div></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>What we would recommend</h2>
+    <ul class="plain">
+      <li>Treat the delivery promise as the main design lever for a bundled tier. It decides both how much bundling saves and how long the slowest customers wait.</li>
+      <li>Allow pairs everywhere: they capture most of the saving at little extra wait. Allow 3–4 orders only where orders are dense and the promise is at least about 25–30 min beyond a direct trip.</li>
+      <li>In spread-out areas, cap bundles at 2–3: the fourth order adds under 5% saving.</li>
+      <li>The real fee gap (6,000 vs 1,820 won, about −70%) points the same way as our modelled cost gap (−53% at a cap of 3, 30-min slack) but is larger — consistent with reports that promotions subsidise the bundled tier.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>What this does not show</h2>
+    <ul class="plain">
+      <li>The optimum is over the candidate bundles the course algorithm generates (up to 4 orders), not over every possible plan.</li>
+      <li>The model minimises cost only. It uses all the slack it is given and even sends slow walkers for a 0.2% saving; a real dispatcher also values speed.</li>
+      <li>Demand is frozen. A different promise or price would change how many orders arrive and therefore the bundling opportunity.</li>
+      <li>Four instances, two per area type. Area size and shop-to-customer distance grow together in them, so we cannot say which one drives the difference.</li>
+      <li>Model cost is rider fixed cost plus distance cost. Platform rider pay, commissions and promotions are not modelled, so the cost gap is not a price recommendation.</li>
+      <li>Loose promises are computationally expensive: candidates grow from 1,388 to 234,207 between 15 and 45 min. The course default of 100 s cut generation short at 40–45 min, so we raised the generation limit (up to 30 min per slack) and checked that all other results were unchanged.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>All main scenarios</h2>
+    <p class="sub">STAGE1_2, 100 orders. Cost in won per order; times in minutes (order placed → delivered).</p>
+    <div class="tbl">
+      <table>
+        <caption>Highlighted: the original data (30-min slack) with the course default cap of 4. Grey rows: one car per order (baseline).
+          Every row passed the course solution_check (all 100 orders delivered once, capacity, deadlines, rider limits) and Gurobi returned optimal.</caption>
+        <thead><tr>
+          <th>Slack</th><th>Max bundle</th><th>Cost / order</th><th>vs baseline</th><th>vs no bundling</th>
+          <th>Riders</th><th>Bike</th><th>Walk</th><th>Car</th><th>Mean time</th><th>Slowest 10%</th>
+        </tr></thead>
+        <tbody id="tb"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    <strong>Method.</strong> The course algorithm (myalgorithm.py) generates candidate bundles of 1–4 orders, checking capacity,
+    pickups-before-deliveries and every deadline, and Gurobi then picks the cheapest set that serves each order exactly once within
+    rider limits. We changed only inputs and the candidate filter, in a marked copy of the code: deadlines are recomputed as
+    ready time + direct car time + slack (slack 30 min reproduces the original file exactly); the maximum bundle size is enforced by
+    dropping larger candidates before Gurobi; the baseline sets bike and walk availability to zero with a cap of 1. Cost = rider fixed
+    cost + distance ÷ 100 × variable cost. Times are in seconds in the data (speed in m/s) and shown in minutes. Every solution was
+    re-checked with the course util.solution_check. Raw outputs: summary.csv, orders.csv, fixed_cost_summary.csv, robust_summary.csv.
+    <div class="src">Sources —
+      <a href="https://www.inews24.com/view/1583441" target="_blank" rel="noopener">아이뉴스24, 배민 알뜰배달 vs 한집배달 (2023.4)</a> ·
+      <a href="https://www.inews24.com/view/1612741" target="_blank" rel="noopener">아이뉴스24, 알뜰배달 평균 배달비 1,820원 (2023.7)</a> ·
+      <a href="https://economist.co.kr/article/view/ecn202306150042" target="_blank" rel="noopener">이코노미스트, 알뜰배달 최대 3건 (2023.6)</a> ·
+      <a href="https://v.daum.net/v/20230719185125862" target="_blank" rel="noopener">헤럴드경제, 알뜰배달 배달 지연 (2023.7)</a> ·
+      <a href="https://biz.sbs.co.kr/amp/article/20000161955" target="_blank" rel="noopener">SBS Biz, 쿠팡이츠 묶음배달 무료 (2024.3)</a> ·
+      <a href="https://byline.network/2024/04/01_981662/" target="_blank" rel="noopener">바이라인네트워크, 배민 알뜰배달 무료 (2024.4)</a> ·
+      <a href="https://biz.sbs.co.kr/amp/article/20000292449" target="_blank" rel="noopener">SBS Biz, 배민 한집배달료 거리별 조정 (2026.2)</a>
+    </div>
+  </footer>
+</div>
+
+<div class="tip" id="tip" role="status" aria-live="polite"></div>
+
+<script>
+const D = {"main": [{"s": 900, "k": 1, "car": true, "c": 7244.27, "tot": 724427.0, "b": 100, "dist": 124427, "fx": 600000.0, "vr": 124427.0, "mean": 23.2, "p90": 32.9, "slow": 38.7, "bs": 0.0, "w": 0, "bk": 0, "cr": 100, "sb": 0.0, "sn": 0.0}, {"s": 900, "k": 1, "car": false, "c": 7244.27, "tot": 724427.0, "b": 100, "dist": 124427, "fx": 600000.0, "vr": 124427.0, "mean": 23.2, "p90": 32.9, "slow": 38.7, "bs": 0.0, "w": 0, "bk": 0, "cr": 100, "sb": 0.0, "sn": 0.0}, {"s": 900, "k": 2, "car": false, "c": 4545.52, "tot": 454552.0, "b": 52, "dist": 143105, "fx": 326000.0, "vr": 128552.0, "mean": 30.7, "p90": 42.3, "slow": 46.9, "bs": 0.96, "w": 0, "bk": 7, "cr": 45, "sb": 37.3, "sn": 37.3}, {"s": 900, "k": 3, "car": false, "c": 4022.36, "tot": 402236.0, "b": 41, "dist": 158964, "fx": 286000.0, "vr": 116236.0, "mean": 32.6, "p90": 43.1, "slow": 47.8, "bs": 0.96, "w": 0, "bk": 20, "cr": 21, "sb": 44.5, "sn": 44.5}, {"s": 900, "k": 4, "car": false, "c": 4019.47, "tot": 401947.0, "b": 41, "dist": 156471, "fx": 286000.0, "vr": 115947.0, "mean": 31.9, "p90": 42.1, "slow": 47.5, "bs": 0.96, "w": 0, "bk": 20, "cr": 21, "sb": 44.5, "sn": 44.5}, {"s": 1200, "k": 1, "car": true, "c": 7244.27, "tot": 724427.0, "b": 100, "dist": 124427, "fx": 600000.0, "vr": 124427.0, "mean": 23.2, "p90": 32.9, "slow": 38.7, "bs": 0.0, "w": 0, "bk": 0, "cr": 100, "sb": 0.0, "sn": 0.0}, {"s": 1200, "k": 1, "car": false, "c": 7244.27, "tot": 724427.0, "b": 100, "dist": 124427, "fx": 600000.0, "vr": 124427.0, "mean": 23.2, "p90": 32.9, "slow": 38.7, "bs": 0.0, "w": 0, "bk": 0, "cr": 100, "sb": 0.0, "sn": 0.0}, {"s": 1200, "k": 2, "car": false, "c": 4421.49, "tot": 442149.0, "b": 51, "dist": 136035, "fx": 316000.0, "vr": 126149.0, "mean": 31.7, "p90": 44.3, "slow": 47.6, "bs": 0.98, "w": 0, "bk": 5, "cr": 46, "sb": 39.0, "sn": 39.0}, {"s": 1200, "k": 3, "car": false, "c": 3673.42, "tot": 367342.0, "b": 36, "dist": 155475, "fx": 254000.0, "vr": 113342.0, "mean": 35.3, "p90": 47.4, "slow": 51.9, "bs": 0.99, "w": 0, "bk": 19, "cr": 17, "sb": 49.3, "sn": 49.3}, {"s": 1200, "k": 4, "car": false, "c": 3518.34, "tot": 351834.0, "b": 33, "dist": 162672, "fx": 238000.0, "vr": 113834.0, "mean": 36.4, "p90": 48.1, "slow": 52.1, "bs": 0.98, "w": 0, "bk": 20, "cr": 13, "sb": 51.4, "sn": 51.4}, {"s": 1500, "k": 1, "car": true, "c": 7244.27, "tot": 724427.0, "b": 100, "dist": 124427, "fx": 600000.0, "vr": 124427.0, "mean": 23.2, "p90": 32.9, "slow": 38.7, "bs": 0.0, "w": 0, "bk": 0, "cr": 100, "sb": 0.0, "sn": -0.0}, {"s": 1500, "k": 1, "car": false, "c": 7242.54, "tot": 724254.0, "b": 100, "dist": 124427, "fx": 604000.0, "vr": 120254.0, "mean": 23.7, "p90": 33.0, "slow": 42.9, "bs": 0.0, "w": 2, "bk": 0, "cr": 98, "sb": 0.0, "sn": 0.0}, {"s": 1500, "k": 2, "car": false, "c": 4348.2, "tot": 434820.0, "b": 50, "dist": 133180, "fx": 312000.0, "vr": 122820.0, "mean": 33.8, "p90": 46.2, "slow": 49.4, "bs": 1.0, "w": 1, "bk": 5, "cr": 44, "sb": 40.0, "sn": 40.0}, {"s": 1500, "k": 3, "car": false, "c": 3496.76, "tot": 349676.0, "b": 35, "dist": 146399, "fx": 230000.0, "vr": 119676.0, "mean": 37.9, "p90": 49.5, "slow": 52.5, "bs": 1.0, "w": 0, "bk": 10, "cr": 25, "sb": 51.7, "sn": 51.7}, {"s": 1500, "k": 4, "car": false, "c": 3260.42, "tot": 326042.0, "b": 29, "dist": 164738, "fx": 210000.0, "vr": 116042.0, "mean": 40.6, "p90": 51.0, "slow": 56.7, "bs": 1.0, "w": 0, "bk": 18, "cr": 11, "sb": 55.0, "sn": 55.0}, {"s": 1800, "k": 1, "car": true, "c": 7244.27, "tot": 724427.0, "b": 100, "dist": 124427, "fx": 600000.0, "vr": 124427.0, "mean": 23.2, "p90": 32.9, "slow": 38.7, "bs": 0.0, "w": 0, "bk": 0, "cr": 100, "sb": 0.0, "sn": -0.1}, {"s": 1800, "k": 1, "car": false, "c": 7233.44, "tot": 723344.0, "b": 100, "dist": 124427, "fx": 610000.0, "vr": 113344.0, "mean": 24.6, "p90": 35.3, "slow": 50.5, "bs": 0.0, "w": 5, "bk": 0, "cr": 95, "sb": 0.1, "sn": 0.0}, {"s": 1800, "k": 2, "car": false, "c": 4302.03, "tot": 430203.0, "b": 50, "dist": 132620, "fx": 312000.0, "vr": 118203.0, "mean": 35.1, "p90": 48.4, "slow": 57.0, "bs": 1.0, "w": 3, "bk": 3, "cr": 44, "sb": 40.6, "sn": 40.5}, {"s": 1800, "k": 3, "car": false, "c": 3387.07, "tot": 338707.0, "b": 34, "dist": 140553, "fx": 226000.0, "vr": 112707.0, "mean": 39.3, "p90": 51.8, "slow": 57.9, "bs": 1.0, "w": 0, "bk": 11, "cr": 23, "sb": 53.2, "sn": 53.2}, {"s": 1800, "k": 4, "car": false, "c": 3099.09, "tot": 309909.0, "b": 27, "dist": 160065, "fx": 202000.0, "vr": 107909.0, "mean": 42.6, "p90": 55.0, "slow": 58.6, "bs": 1.0, "w": 0, "bk": 20, "cr": 7, "sb": 57.2, "sn": 57.2}, {"s": 2100, "k": 1, "car": true, "c": 7244.27, "tot": 724427.0, "b": 100, "dist": 124427, "fx": 600000.0, "vr": 124427.0, "mean": 23.2, "p90": 32.9, "slow": 38.7, "bs": 0.0, "w": 0, "bk": 0, "cr": 100, "sb": 0.0, "sn": -0.2}, {"s": 2100, "k": 1, "car": false, "c": 7227.85, "tot": 722785.0, "b": 100, "dist": 124427, "fx": 612000.0, "vr": 110785.0, "mean": 24.9, "p90": 35.3, "slow": 53.6, "bs": 0.0, "w": 6, "bk": 0, "cr": 94, "sb": 0.2, "sn": 0.0}, {"s": 2100, "k": 2, "car": false, "c": 4267.39, "tot": 426739.0, "b": 50, "dist": 130348, "fx": 316000.0, "vr": 110739.0, "mean": 37.1, "p90": 53.9, "slow": 63.3, "bs": 1.0, "w": 6, "bk": 2, "cr": 42, "sb": 41.1, "sn": 41.0}, {"s": 2100, "k": 3, "car": false, "c": 3358.14, "tot": 335814.0, "b": 34, "dist": 137991, "fx": 224000.0, "vr": 111814.0, "mean": 41.6, "p90": 55.5, "slow": 59.5, "bs": 1.0, "w": 1, "bk": 9, "cr": 24, "sb": 53.6, "sn": 53.5}, {"s": 2100, "k": 4, "car": false, "c": 2961.48, "tot": 296148.0, "b": 26, "dist": 150673, "fx": 176000.0, "vr": 120148.0, "mean": 44.8, "p90": 59.4, "slow": 62.0, "bs": 1.0, "w": 0, "bk": 10, "cr": 16, "sb": 59.1, "sn": 59.0}, {"s": 2400, "k": 1, "car": true, "c": 7244.27, "tot": 724427.0, "b": 100, "dist": 124427, "fx": 600000.0, "vr": 124427.0, "mean": 23.2, "p90": 32.9, "slow": 38.7, "bs": 0.0, "w": 0, "bk": 0, "cr": 100, "sb": 0.0, "sn": -0.2}, {"s": 2400, "k": 1, "car": false, "c": 7227.85, "tot": 722785.0, "b": 100, "dist": 124427, "fx": 612000.0, "vr": 110785.0, "mean": 24.9, "p90": 35.3, "slow": 53.6, "bs": 0.0, "w": 6, "bk": 0, "cr": 94, "sb": 0.2, "sn": 0.0}, {"s": 2400, "k": 2, "car": false, "c": 4243.8, "tot": 424380.0, "b": 50, "dist": 132982, "fx": 332000.0, "vr": 92380.0, "mean": 40.6, "p90": 61.6, "slow": 68.4, "bs": 1.0, "w": 13, "bk": 3, "cr": 34, "sb": 41.4, "sn": 41.3}, {"s": 2400, "k": 3, "car": false, "c": 3296.53, "tot": 329653.0, "b": 34, "dist": 132814, "fx": 226000.0, "vr": 103653.0, "mean": 43.5, "p90": 59.7, "slow": 66.2, "bs": 1.0, "w": 3, "bk": 8, "cr": 23, "sb": 54.5, "sn": 54.4}, {"s": 2400, "k": 4, "car": false, "c": 2869.67, "tot": 286967.0, "b": 25, "dist": 147585, "fx": 168000.0, "vr": 118967.0, "mean": 49.1, "p90": 63.9, "slow": 66.9, "bs": 1.0, "w": 0, "bk": 9, "cr": 16, "sb": 60.4, "sn": 60.3}, {"s": 2700, "k": 1, "car": true, "c": 7244.27, "tot": 724427.0, "b": 100, "dist": 124427, "fx": 600000.0, "vr": 124427.0, "mean": 23.2, "p90": 32.9, "slow": 38.7, "bs": 0.0, "w": 0, "bk": 0, "cr": 100, "sb": 0.0, "sn": -0.2}, {"s": 2700, "k": 1, "car": false, "c": 7227.85, "tot": 722785.0, "b": 100, "dist": 124427, "fx": 612000.0, "vr": 110785.0, "mean": 24.9, "p90": 35.3, "slow": 53.6, "bs": 0.0, "w": 6, "bk": 0, "cr": 94, "sb": 0.2, "sn": 0.0}, {"s": 2700, "k": 2, "car": false, "c": 4215.92, "tot": 421592.0, "b": 50, "dist": 129564, "fx": 330000.0, "vr": 91592.0, "mean": 42.2, "p90": 67.7, "slow": 72.2, "bs": 1.0, "w": 13, "bk": 2, "cr": 35, "sb": 41.8, "sn": 41.7}, {"s": 2700, "k": 3, "car": false, "c": 3272.6, "tot": 327260.0, "b": 34, "dist": 130112, "fx": 224000.0, "vr": 103260.0, "mean": 44.2, "p90": 60.8, "slow": 66.7, "bs": 0.99, "w": 3, "bk": 7, "cr": 24, "sb": 54.8, "sn": 54.7}, {"s": 2700, "k": 4, "car": false, "c": 2809.15, "tot": 280915.0, "b": 25, "dist": 138372, "fx": 172000.0, "vr": 108915.0, "mean": 49.9, "p90": 64.5, "slow": 69.0, "bs": 1.0, "w": 0, "bk": 11, "cr": 14, "sb": 61.2, "sn": 61.1}], "fc": [{"lab": "A 원본 8000/8000/6000", "col": "차 단독", "c": 7244.27, "b": 100, "sn": -0.1, "sb": 0.0, "w": 0, "bk": 0, "cr": 100, "slow": 38.7}, {"lab": "A 원본 8000/8000/6000", "col": "최대 1건", "c": 7233.44, "b": 100, "sn": 0.0, "sb": 0.1, "w": 5, "bk": 0, "cr": 95, "slow": 50.5}, {"lab": "A 원본 8000/8000/6000", "col": "최대 2건", "c": 4302.03, "b": 50, "sn": 40.5, "sb": 40.6, "w": 3, "bk": 3, "cr": 44, "slow": 57.0}, {"lab": "A 원본 8000/8000/6000", "col": "최대 3건", "c": 3387.07, "b": 34, "sn": 53.2, "sb": 53.2, "w": 0, "bk": 11, "cr": 23, "slow": 57.9}, {"lab": "A 원본 8000/8000/6000", "col": "최대 4건", "c": 3099.09, "b": 27, "sn": 57.2, "sb": 57.2, "w": 0, "bk": 20, "cr": 7, "slow": 58.6}, {"lab": "B 균일 6000", "col": "차 단독", "c": 7244.27, "b": 100, "sn": -8.5, "sb": 0.0, "w": 0, "bk": 0, "cr": 100, "slow": 38.7}, {"lab": "B 균일 6000", "col": "최대 1건", "c": 6678.89, "b": 100, "sn": 0.0, "sb": 7.8, "w": 30, "bk": 20, "cr": 50, "slow": 57.1}, {"lab": "B 균일 6000", "col": "최대 2건", "c": 3610.12, "b": 50, "sn": 45.9, "sb": 50.2, "w": 30, "bk": 20, "cr": 0, "slow": 61.8}, {"lab": "B 균일 6000", "col": "최대 3건", "c": 2977.18, "b": 34, "sn": 55.4, "sb": 58.9, "w": 5, "bk": 20, "cr": 9, "slow": 58.6}, {"lab": "B 균일 6000", "col": "최대 4건", "c": 2680.05, "b": 28, "sn": 59.9, "sb": 63.0, "w": 3, "bk": 20, "cr": 5, "slow": 58.7}, {"lab": "C 균일 5000", "col": "차 단독", "c": 6244.27, "b": 100, "sn": -10.0, "sb": 0.0, "w": 0, "bk": 0, "cr": 100, "slow": 38.7}, {"lab": "C 균일 5000", "col": "최대 1건", "c": 5678.89, "b": 100, "sn": 0.0, "sb": 9.1, "w": 30, "bk": 20, "cr": 50, "slow": 57.1}, {"lab": "C 균일 5000", "col": "최대 2건", "c": 3110.12, "b": 50, "sn": 45.2, "sb": 50.2, "w": 30, "bk": 20, "cr": 0, "slow": 61.8}, {"lab": "C 균일 5000", "col": "최대 3건", "c": 2634.79, "b": 35, "sn": 53.6, "sb": 57.8, "w": 8, "bk": 20, "cr": 7, "slow": 58.8}, {"lab": "C 균일 5000", "col": "최대 4건", "c": 2400.05, "b": 28, "sn": 57.7, "sb": 61.6, "w": 3, "bk": 20, "cr": 5, "slow": 58.7}, {"lab": "D 혼합 9000/4000/5000", "col": "차 단독", "c": 6244.27, "b": 100, "sn": -13.9, "sb": 0.0, "w": 0, "bk": 0, "cr": 100, "slow": 38.7}, {"lab": "D 혼합 9000/4000/5000", "col": "최대 1건", "c": 5482.59, "b": 100, "sn": 0.0, "sb": 12.2, "w": 30, "bk": 0, "cr": 70, "slow": 57.1}, {"lab": "D 혼합 9000/4000/5000", "col": "최대 2건", "c": 3087.2, "b": 51, "sn": 43.7, "sb": 50.6, "w": 30, "bk": 0, "cr": 21, "slow": 60.1}, {"lab": "D 혼합 9000/4000/5000", "col": "최대 3건", "c": 2786.92, "b": 45, "sn": 49.2, "sb": 55.4, "w": 30, "bk": 0, "cr": 15, "slow": 60.9}, {"lab": "D 혼합 9000/4000/5000", "col": "최대 4건", "c": 2725.2, "b": 44, "sn": 50.3, "sb": 56.4, "w": 30, "bk": 0, "cr": 14, "slow": 60.9}], "rb": [{"file": "STAGE1_2", "s": 900, "k": 1, "car": true, "c": 7244.27, "sn": 0.0, "b": 100, "slow": 38.7}, {"file": "STAGE1_2", "s": 900, "k": 1, "car": false, "c": 7244.27, "sn": 0.0, "b": 100, "slow": 38.7}, {"file": "STAGE1_2", "s": 900, "k": 2, "car": false, "c": 4545.52, "sn": 37.3, "b": 52, "slow": 46.9}, {"file": "STAGE1_2", "s": 900, "k": 3, "car": false, "c": 4022.36, "sn": 44.5, "b": 41, "slow": 47.8}, {"file": "STAGE1_2", "s": 900, "k": 4, "car": false, "c": 4019.47, "sn": 44.5, "b": 41, "slow": 47.5}, {"file": "STAGE1_2", "s": 1200, "k": 1, "car": true, "c": 7244.27, "sn": 0.0, "b": 100, "slow": 38.7}, {"file": "STAGE1_2", "s": 1200, "k": 1, "car": false, "c": 7244.27, "sn": 0.0, "b": 100, "slow": 38.7}, {"file": "STAGE1_2", "s": 1200, "k": 2, "car": false, "c": 4421.49, "sn": 39.0, "b": 51, "slow": 47.6}, {"file": "STAGE1_2", "s": 1200, "k": 3, "car": false, "c": 3673.42, "sn": 49.3, "b": 36, "slow": 51.9}, {"file": "STAGE1_2", "s": 1200, "k": 4, "car": false, "c": 3518.34, "sn": 51.4, "b": 33, "slow": 52.1}, {"file": "STAGE1_2", "s": 1500, "k": 1, "car": true, "c": 7244.27, "sn": -0.0, "b": 100, "slow": 38.7}, {"file": "STAGE1_2", "s": 1500, "k": 1, "car": false, "c": 7242.54, "sn": 0.0, "b": 100, "slow": 42.9}, {"file": "STAGE1_2", "s": 1500, "k": 2, "car": false, "c": 4348.2, "sn": 40.0, "b": 50, "slow": 49.4}, {"file": "STAGE1_2", "s": 1500, "k": 3, "car": false, "c": 3496.76, "sn": 51.7, "b": 35, "slow": 52.5}, {"file": "STAGE1_2", "s": 1500, "k": 4, "car": false, "c": 3260.42, "sn": 55.0, "b": 29, "slow": 56.7}, {"file": "STAGE1_2", "s": 1800, "k": 1, "car": true, "c": 7244.27, "sn": -0.1, "b": 100, "slow": 38.7}, {"file": "STAGE1_2", "s": 1800, "k": 1, "car": false, "c": 7233.44, "sn": 0.0, "b": 100, "slow": 50.5}, {"file": "STAGE1_2", "s": 1800, "k": 2, "car": false, "c": 4302.03, "sn": 40.5, "b": 50, "slow": 57.0}, {"file": "STAGE1_2", "s": 1800, "k": 3, "car": false, "c": 3387.07, "sn": 53.2, "b": 34, "slow": 57.9}, {"file": "STAGE1_2", "s": 1800, "k": 4, "car": false, "c": 3099.09, "sn": 57.2, "b": 27, "slow": 58.6}, {"file": "STAGE1_2", "s": 2100, "k": 1, "car": true, "c": 7244.27, "sn": -0.2, "b": 100, "slow": 38.7}, {"file": "STAGE1_2", "s": 2100, "k": 1, "car": false, "c": 7227.85, "sn": 0.0, "b": 100, "slow": 53.6}, {"file": "STAGE1_2", "s": 2100, "k": 2, "car": false, "c": 4267.39, "sn": 41.0, "b": 50, "slow": 63.3}, {"file": "STAGE1_2", "s": 2100, "k": 3, "car": false, "c": 3358.14, "sn": 53.5, "b": 34, "slow": 59.5}, {"file": "STAGE1_2", "s": 2100, "k": 4, "car": false, "c": 2961.48, "sn": 59.0, "b": 26, "slow": 62.0}, {"file": "STAGE1_1", "s": 900, "k": 1, "car": true, "c": 7322.13, "sn": 0.0, "b": 100, "slow": 34.8}, {"file": "STAGE1_1", "s": 900, "k": 1, "car": false, "c": 7322.13, "sn": 0.0, "b": 100, "slow": 34.8}, {"file": "STAGE1_1", "s": 900, "k": 2, "car": false, "c": 4531.21, "sn": 38.1, "b": 51, "slow": 44.1}, {"file": "STAGE1_1", "s": 900, "k": 3, "car": false, "c": 3954.45, "sn": 46.0, "b": 41, "slow": 45.8}, {"file": "STAGE1_1", "s": 900, "k": 4, "car": false, "c": 3888.21, "sn": 46.9, "b": 40, "slow": 46.2}, {"file": "STAGE1_1", "s": 1200, "k": 1, "car": true, "c": 7322.13, "sn": 0.0, "b": 100, "slow": 34.8}, {"file": "STAGE1_1", "s": 1200, "k": 1, "car": false, "c": 7322.13, "sn": 0.0, "b": 100, "slow": 34.8}, {"file": "STAGE1_1", "s": 1200, "k": 2, "car": false, "c": 4434.83, "sn": 39.4, "b": 50, "slow": 45.7}, {"file": "STAGE1_1", "s": 1200, "k": 3, "car": false, "c": 3642.29, "sn": 50.3, "b": 35, "slow": 48.9}, {"file": "STAGE1_1", "s": 1200, "k": 4, "car": false, "c": 3501.58, "sn": 52.2, "b": 33, "slow": 50.5}, {"file": "STAGE1_1", "s": 1500, "k": 1, "car": true, "c": 7322.13, "sn": -0.0, "b": 100, "slow": 34.8}, {"file": "STAGE1_1", "s": 1500, "k": 1, "car": false, "c": 7321.08, "sn": 0.0, "b": 100, "slow": 38.7}, {"file": "STAGE1_1", "s": 1500, "k": 2, "car": false, "c": 4371.91, "sn": 40.3, "b": 51, "slow": 50.0}, {"file": "STAGE1_1", "s": 1500, "k": 3, "car": false, "c": 3518.24, "sn": 51.9, "b": 34, "slow": 52.7}, {"file": "STAGE1_1", "s": 1500, "k": 4, "car": false, "c": 3154.4, "sn": 56.9, "b": 28, "slow": 54.8}, {"file": "STAGE1_1", "s": 1800, "k": 1, "car": true, "c": 7322.13, "sn": -0.1, "b": 100, "slow": 34.8}, {"file": "STAGE1_1", "s": 1800, "k": 1, "car": false, "c": 7314.65, "sn": 0.0, "b": 100, "slow": 48.1}, {"file": "STAGE1_1", "s": 1800, "k": 2, "car": false, "c": 4291.64, "sn": 41.3, "b": 50, "slow": 56.5}, {"file": "STAGE1_1", "s": 1800, "k": 3, "car": false, "c": 3414.1, "sn": 53.3, "b": 34, "slow": 56.7}, {"file": "STAGE1_1", "s": 1800, "k": 4, "car": false, "c": 3039.12, "sn": 58.5, "b": 26, "slow": 57.6}, {"file": "STAGE1_1", "s": 2100, "k": 1, "car": true, "c": 7322.13, "sn": -0.1, "b": 100, "slow": 34.8}, {"file": "STAGE1_1", "s": 2100, "k": 1, "car": false, "c": 7314.65, "sn": 0.0, "b": 100, "slow": 48.1}, {"file": "STAGE1_1", "s": 2100, "k": 2, "car": false, "c": 4265.51, "sn": 41.7, "b": 50, "slow": 60.9}, {"file": "STAGE1_1", "s": 2100, "k": 3, "car": false, "c": 3335.04, "sn": 54.4, "b": 34, "slow": 59.7}, {"file": "STAGE1_1", "s": 2100, "k": 4, "car": false, "c": 2918.62, "sn": 60.1, "b": 26, "slow": 60.9}, {"file": "STAGE1_13", "s": 900, "k": 1, "car": true, "c": 7650.55, "sn": 0.0, "b": 100, "slow": 47.0}, {"file": "STAGE1_13", "s": 900, "k": 1, "car": false, "c": 7650.55, "sn": 0.0, "b": 100, "slow": 47.0}, {"file": "STAGE1_13", "s": 900, "k": 2, "car": false, "c": 5568.31, "sn": 27.2, "b": 61, "slow": 53.4}, {"file": "STAGE1_13", "s": 900, "k": 3, "car": false, "c": 5300.47, "sn": 30.7, "b": 56, "slow": 54.3}, {"file": "STAGE1_13", "s": 900, "k": 4, "car": false, "c": 5300.47, "sn": 30.7, "b": 56, "slow": 54.3}, {"file": "STAGE1_13", "s": 1200, "k": 1, "car": true, "c": 7650.55, "sn": 0.0, "b": 100, "slow": 47.0}, {"file": "STAGE1_13", "s": 1200, "k": 1, "car": false, "c": 7650.55, "sn": 0.0, "b": 100, "slow": 47.0}, {"file": "STAGE1_13", "s": 1200, "k": 2, "car": false, "c": 5310.76, "sn": 30.6, "b": 58, "slow": 55.2}, {"file": "STAGE1_13", "s": 1200, "k": 3, "car": false, "c": 4874.9, "sn": 36.3, "b": 50, "slow": 58.1}, {"file": "STAGE1_13", "s": 1200, "k": 4, "car": false, "c": 4818.03, "sn": 37.0, "b": 50, "slow": 58.5}, {"file": "STAGE1_13", "s": 1500, "k": 1, "car": true, "c": 7650.55, "sn": -0.0, "b": 100, "slow": 47.0}, {"file": "STAGE1_13", "s": 1500, "k": 1, "car": false, "c": 7649.9, "sn": 0.0, "b": 100, "slow": 49.5}, {"file": "STAGE1_13", "s": 1500, "k": 2, "car": false, "c": 5191.98, "sn": 32.1, "b": 55, "slow": 63.5}, {"file": "STAGE1_13", "s": 1500, "k": 3, "car": false, "c": 4569.8, "sn": 40.3, "b": 45, "slow": 64.8}, {"file": "STAGE1_13", "s": 1500, "k": 4, "car": false, "c": 4489.66, "sn": 41.3, "b": 43, "slow": 65.9}, {"file": "STAGE1_13", "s": 1800, "k": 1, "car": true, "c": 7650.55, "sn": -0.2, "b": 100, "slow": 47.0}, {"file": "STAGE1_13", "s": 1800, "k": 1, "car": false, "c": 7634.64, "sn": 0.0, "b": 100, "slow": 58.8}, {"file": "STAGE1_13", "s": 1800, "k": 2, "car": false, "c": 4998.23, "sn": 34.5, "b": 53, "slow": 65.3}, {"file": "STAGE1_13", "s": 1800, "k": 3, "car": false, "c": 4314.84, "sn": 43.5, "b": 40, "slow": 67.7}, {"file": "STAGE1_13", "s": 1800, "k": 4, "car": false, "c": 4174.65, "sn": 45.3, "b": 39, "slow": 71.0}, {"file": "STAGE1_13", "s": 2100, "k": 1, "car": true, "c": 7650.55, "sn": -0.3, "b": 100, "slow": 47.0}, {"file": "STAGE1_13", "s": 2100, "k": 1, "car": false, "c": 7628.39, "sn": 0.0, "b": 100, "slow": 60.9}, {"file": "STAGE1_13", "s": 2100, "k": 2, "car": false, "c": 4927.59, "sn": 35.4, "b": 53, "slow": 69.1}, {"file": "STAGE1_13", "s": 2100, "k": 3, "car": false, "c": 4204.85, "sn": 44.9, "b": 39, "slow": 69.5}, {"file": "STAGE1_13", "s": 2100, "k": 4, "car": false, "c": 4018.1, "sn": 47.3, "b": 35, "slow": 70.0}, {"file": "STAGE1_14", "s": 900, "k": 1, "car": true, "c": 7983.7, "sn": -0.0, "b": 100, "slow": 46.1}, {"file": "STAGE1_14", "s": 900, "k": 1, "car": false, "c": 7980.59, "sn": 0.0, "b": 100, "slow": 45.2}, {"file": "STAGE1_14", "s": 900, "k": 2, "car": false, "c": 5609.29, "sn": 29.7, "b": 57, "slow": 55.2}, {"file": "STAGE1_14", "s": 900, "k": 3, "car": false, "c": 5438.53, "sn": 31.9, "b": 56, "slow": 56.1}, {"file": "STAGE1_14", "s": 900, "k": 4, "car": false, "c": 5438.53, "sn": 31.9, "b": 56, "slow": 56.1}, {"file": "STAGE1_14", "s": 1200, "k": 1, "car": true, "c": 7983.7, "sn": -0.0, "b": 100, "slow": 46.1}, {"file": "STAGE1_14", "s": 1200, "k": 1, "car": false, "c": 7980.59, "sn": 0.0, "b": 100, "slow": 45.2}, {"file": "STAGE1_14", "s": 1200, "k": 2, "car": false, "c": 5413.0, "sn": 32.2, "b": 54, "slow": 59.0}, {"file": "STAGE1_14", "s": 1200, "k": 3, "car": false, "c": 4920.77, "sn": 38.3, "b": 46, "slow": 58.3}, {"file": "STAGE1_14", "s": 1200, "k": 4, "car": false, "c": 4920.77, "sn": 38.3, "b": 46, "slow": 58.3}, {"file": "STAGE1_14", "s": 1500, "k": 1, "car": true, "c": 7983.7, "sn": -0.0, "b": 100, "slow": 46.1}, {"file": "STAGE1_14", "s": 1500, "k": 1, "car": false, "c": 7979.81, "sn": 0.0, "b": 100, "slow": 47.6}, {"file": "STAGE1_14", "s": 1500, "k": 2, "car": false, "c": 5316.97, "sn": 33.4, "b": 52, "slow": 58.8}, {"file": "STAGE1_14", "s": 1500, "k": 3, "car": false, "c": 4692.86, "sn": 41.2, "b": 43, "slow": 63.8}, {"file": "STAGE1_14", "s": 1500, "k": 4, "car": false, "c": 4654.83, "sn": 41.7, "b": 41, "slow": 63.3}, {"file": "STAGE1_14", "s": 1800, "k": 1, "car": true, "c": 7983.7, "sn": -0.3, "b": 100, "slow": 46.1}, {"file": "STAGE1_14", "s": 1800, "k": 1, "car": false, "c": 7955.91, "sn": 0.0, "b": 100, "slow": 59.5}, {"file": "STAGE1_14", "s": 1800, "k": 2, "car": false, "c": 5222.07, "sn": 34.4, "b": 52, "slow": 58.7}, {"file": "STAGE1_14", "s": 1800, "k": 3, "car": false, "c": 4502.4, "sn": 43.4, "b": 40, "slow": 64.7}, {"file": "STAGE1_14", "s": 1800, "k": 4, "car": false, "c": 4423.34, "sn": 44.4, "b": 38, "slow": 67.1}, {"file": "STAGE1_14", "s": 2100, "k": 1, "car": true, "c": 7983.7, "sn": -0.8, "b": 100, "slow": 46.1}, {"file": "STAGE1_14", "s": 2100, "k": 1, "car": false, "c": 7921.49, "sn": 0.0, "b": 100, "slow": 66.0}, {"file": "STAGE1_14", "s": 2100, "k": 2, "car": false, "c": 5153.57, "sn": 34.9, "b": 52, "slow": 65.2}, {"file": "STAGE1_14", "s": 2100, "k": 3, "car": false, "c": 4397.67, "sn": 44.5, "b": 38, "slow": 68.3}, {"file": "STAGE1_14", "s": 2100, "k": 4, "car": false, "c": 4239.38, "sn": 46.5, "b": 36, "slow": 70.5}], "files": [{"file": "STAGE1_2.json", "K": 100, "original_slack": 1800.0, "area_ns_km": 6.584609910000296, "area_ew_km": 8.60841032565392, "median_shop_to_customer": 1015.5, "fixed_costs": "8000/8000/6000"}, {"file": "STAGE1_1.json", "K": 100, "original_slack": 1200.0, "area_ns_km": 6.582112409999503, "area_ew_km": 8.719486607175547, "median_shop_to_customer": 1145.0, "fixed_costs": "8000/8000/6000"}, {"file": "STAGE1_13.json", "K": 100, "original_slack": 1200.0, "area_ns_km": 16.9770381900003, "area_ew_km": 24.6758085899724, "median_shop_to_customer": 1552.5, "fixed_costs": "8000/8000/6000"}, {"file": "STAGE1_14.json", "K": 100, "original_slack": 2400.0, "area_ns_km": 15.943917899999905, "area_ew_km": 23.49036194693611, "median_shop_to_customer": 1711.0, "fixed_costs": "8000/8000/6000"}], "gen": [{"slack": 900, "gen_time_sec": 1.6864347457885742, "n_candidates": 1388}, {"slack": 1200, "gen_time_sec": 5.815576076507568, "n_candidates": 3525}, {"slack": 1500, "gen_time_sec": 16.377373456954956, "n_candidates": 8573}, {"slack": 1800, "gen_time_sec": 58.43203139305115, "n_candidates": 20868}, {"slack": 2100, "gen_time_sec": 179.51612782478333, "n_candidates": 49568}, {"slack": 2400, "gen_time_sec": 461.4430015087128, "n_candidates": 111195}, {"slack": 2700, "gen_time_sec": 1038.4438326358795, "n_candidates": 234207}]};
+const NS = "http://www.w3.org/2000/svg";
+const SL = [900,1200,1500,1800,2100,2400,2700];
+const mins = s => s/60;
+const fmt = n => Math.round(n).toLocaleString('en-US');
+const el = (t,a={}) => {const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); return e;};
+const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const txt = (g,x,y,s,cls,anchor='middle',fill) => {const t=el('text',{x,y,'text-anchor':anchor,class:cls}); if(fill) t.setAttribute('fill',fill); t.textContent=s; g.appendChild(t); return t;};
+const M = {}; D.main.forEach(r => M[`${r.s}|${r.k}|${r.car}`] = r);
+const get = (s,k,car=false) => M[`${s}|${k}|${car}`];
+const KC = {1:'--k1',2:'--k2',3:'--k3',4:'--k4'};
+
+const tip = document.getElementById('tip');
+function showTip(ev,html){tip.innerHTML=html;tip.style.opacity=1;const r=tip.getBoundingClientRect();
+  let x=ev.clientX+14,y=ev.clientY-r.height-12; if(x+r.width>innerWidth-10)x=ev.clientX-r.width-14; if(y<8)y=ev.clientY+16;
+  tip.style.left=x+'px';tip.style.top=y+'px';}
+function hideTip(){tip.style.opacity=0;}
+
+function frame(s,W,H,L,R,T,B,y0,y1,yStep,yLabel,yFmt){
+  const pw=W-L-R, ph=H-T-B, g=el('g'); s.appendChild(g);
+  const Y=v=>T+ph*(1-(v-y0)/(y1-y0));
+  for(let v=y0; v<=y1+1e-9; v+=yStep){
+    g.appendChild(el('line',{x1:L,x2:L+pw,y1:Y(v),y2:Y(v),stroke:cssv('--grid'),'stroke-width':1}));
+    txt(g,L-8,Y(v)+3.5,yFmt(v),'ax','end');
+  }
+  if(yLabel) txt(g,4,T-12,yLabel,'axl','start');
+  return {g,pw,ph,Y};
+}
+
+/* chart 1: cost vs slack */
+function c1(){
+  const s=document.getElementById('c1'); s.textContent='';
+  const W=760,H=340,L=60,R=150,T=30,B=50;
+  const {g,pw,ph,Y}=frame(s,W,H,L,R,T,B,2500,7500,1000,'won / order',v=>fmt(v));
+  const X=i=>L+pw*i/(SL.length-1);
+  SL.forEach((sl,i)=>txt(g,X(i),H-B+20,mins(sl),'ax'));
+  txt(g,L+pw/2,H-12,'Slack beyond a direct car trip (minutes)  →  looser promise','axl');
+  // original data marker
+  const ox=X(3);
+  g.appendChild(el('line',{x1:ox,x2:ox,y1:T,y2:T+ph,stroke:cssv('--accent'),'stroke-width':1.2,'stroke-dasharray':'4 4'}));
+  txt(g,ox+6,Y(6000),'original data (30 min)','dlab','start',cssv('--accent'));
+  // baseline
+  const by=Y(get(900,1,true).c);
+  g.appendChild(el('line',{x1:L,x2:L+pw,y1:by,y2:by,stroke:cssv('--base'),'stroke-width':1.5,'stroke-dasharray':'6 5'}));
+  [1,2,3,4].forEach(k=>{
+    let d=''; SL.forEach((sl,i)=>{d+=(i?' L ':'M ')+X(i)+' '+Y(get(sl,k).c);});
+    g.appendChild(el('path',{d,fill:'none',stroke:cssv(KC[k]),'stroke-width':k===4?2.6:2,'stroke-linejoin':'round','stroke-linecap':'round'}));
+    SL.forEach((sl,i)=>g.appendChild(el('circle',{cx:X(i),cy:Y(get(sl,k).c),r:k===4?4.5:3.5,fill:cssv(KC[k]),stroke:cssv('--surface'),'stroke-width':1.5})));
+  });
+  // right-side labels
+  const lab=[[1,'no bundling',14],[2,'max 2',4],[3,'max 3',-2],[4,'max 4',10]];
+  lab.forEach(([k,t,dy])=>{const v=get(2700,k).c; txt(g,L+pw+8,Y(v)+4+dy,`${t} · ${fmt(v)}`,'dlab','start',cssv(KC[k]));});
+  txt(g,L+pw+8,by-6,`one car/order · ${fmt(get(900,1,true).c)}`,'dlab','start',cssv('--base'));
+  // left labels for max 4
+  txt(g,X(0)+6,Y(get(900,4).c)+22,fmt(get(900,4).c),'dlab','start',cssv('--k4'));
+  txt(g,ox+6,Y(get(1800,4).c)+18,fmt(get(1800,4).c),'dlab','start',cssv('--k4'));
+  // hover
+  const step=pw/(SL.length-1);
+  SL.forEach((sl,i)=>{
+    const hit=el('rect',{x:X(i)-step/2,y:T,width:step,height:ph,fill:'transparent'}); hit.style.cursor='crosshair';
+    hit.addEventListener('mousemove',ev=>showTip(ev,`<b>slack ${mins(sl)} min</b><br>`+
+      [1,2,3,4].map(k=>`max ${k}: ${fmt(get(sl,k).c)} · ${get(sl,k).b} riders`).join('<br>')+
+      `<br>one car/order: ${fmt(get(sl,1,true).c)}`));
+    hit.addEventListener('mouseleave',hideTip); g.appendChild(hit);
+  });
+}
+
+/* chart 2: step savings grouped bars */
+function c2(){
+  const s=document.getElementById('c2'); s.textContent='';
+  const W=420,H=300,L=40,R=8,T=22,B=46;
+  const {g,pw,ph,Y}=frame(s,W,H,L,R,T,B,0,45,15,'% saved',v=>v);
+  const step=pw/SL.length, bw=step*0.24;
+  SL.forEach((sl,i)=>{
+    const c=[1,2,3,4].map(k=>get(sl,k).c);
+    const st=[1,2,3].map(j=>(c[j-1]-c[j])/c[j-1]*100);
+    st.forEach((v,j)=>{
+      const x=L+step*i+step*0.14+j*bw, y=Y(v);
+      g.appendChild(el('rect',{x,y,width:bw-2,height:Math.max(T+ph-y,1),rx:2,fill:cssv(KC[j+2])}));
+    });
+    txt(g,L+step*i+step/2,H-B+18,mins(sl),'ax');
+    const hit=el('rect',{x:L+step*i,y:T,width:step,height:ph,fill:'transparent'});
+    hit.addEventListener('mousemove',ev=>showTip(ev,`<b>slack ${mins(sl)} min</b><br>1→2: −${st[0].toFixed(1)}%<br>2→3: −${st[1].toFixed(1)}%<br>3→4: −${st[2].toFixed(1)}%`));
+    hit.addEventListener('mouseleave',hideTip); g.appendChild(hit);
+  });
+  txt(g,L+pw/2,H-8,'Slack (minutes)','axl');
+}
+
+/* generic line chart over slack */
+function lines(id,series,y0,y1,yStep,yLabel,yFmt,tipFn){
+  const s=document.getElementById(id); s.textContent='';
+  const W=420,H=300,L=44,R=12,T=22,B=46;
+  const {g,pw,ph,Y}=frame(s,W,H,L,R,T,B,y0,y1,yStep,yLabel,yFmt);
+  const xs=series[0].pts.map(p=>p[0]);
+  const X=v=>L+pw*(v-xs[0])/(xs[xs.length-1]-xs[0]);
+  xs.forEach(v=>txt(g,X(v),H-B+18,mins(v),'ax'));
+  txt(g,L+pw/2,H-8,'Slack (minutes)','axl');
+  series.forEach(sr=>{
+    let d=''; sr.pts.forEach((p,i)=>{d+=(i?' L ':'M ')+X(p[0])+' '+Y(p[1]);});
+    const a={d,fill:'none',stroke:cssv(sr.color),'stroke-width':2,'stroke-linejoin':'round'};
+    if(sr.dash) a['stroke-dasharray']='5 4';
+    g.appendChild(el('path',a));
+    sr.pts.forEach(p=>g.appendChild(el('circle',{cx:X(p[0]),cy:Y(p[1]),r:3.2,fill:cssv(sr.color),stroke:cssv('--surface'),'stroke-width':1.2})));
+    if(sr.label){const p=sr.pts[sr.pts.length-1]; txt(g,X(p[0])-4,Y(p[1])+(sr.ldy||-8),sr.label,'dlab','end',cssv(sr.color));}
+  });
+  const step=pw/(xs.length-1);
+  xs.forEach(v=>{
+    const hit=el('rect',{x:X(v)-step/2,y:T,width:step,height:ph,fill:'transparent'});
+    hit.addEventListener('mousemove',ev=>showTip(ev,tipFn(v))); hit.addEventListener('mouseleave',hideTip); g.appendChild(hit);
+  });
+}
+
+function c3(){
+  const ser=[1,2,3,4].map(k=>({color:KC[k],pts:SL.map(sl=>[sl,get(sl,k).slow])}));
+  lines('c3',ser,35,75,10,'minutes',v=>v,sl=>`<b>slack ${mins(sl)} min</b><br>`+
+    [1,2,3,4].map(k=>`max ${k}: ${get(sl,k).slow.toFixed(1)} min`).join('<br>')+`<br>one car/order: ${get(sl,1,true).slow.toFixed(1)} min`);
+}
+
+function c4(){
+  const RS=[900,1200,1500,1800,2100];
+  const files=[['STAGE1_2','--narrow',false,'STAGE1_2 (main)'],['STAGE1_1','--narrow',true,'STAGE1_1'],['STAGE1_13','--wide',false,'STAGE1_13'],['STAGE1_14','--wide',true,'STAGE1_14']];
+  const R={}; D.rb.forEach(r=>{R[`${r.file}|${r.s}|${r.k}|${r.car}`]=r;});
+  const ser=files.map(([f,c,dash,lab])=>({color:c,dash,pts:RS.map(sl=>[sl,R[`${f}|${sl}|4|false`].sn])}));
+  const info={}; D.files.forEach(x=>info[x.file.replace('.json','')]=x);
+  lines('c4',ser,25,65,10,'% saved',v=>v,sl=>`<b>slack ${mins(sl)} min · max 4</b><br>`+
+    files.map(([f])=>`${f}: −${R[`${f}|${sl}|4|false`].sn.toFixed(1)}% · ${R[`${f}|${sl}|4|false`].b} riders`).join('<br>'));
+  const s=document.getElementById('c4'); const g=s.querySelector('g');
+  txt(g,60,40,'dense: STAGE1_2 (solid), STAGE1_1 (dashed)','dlab','start',cssv('--narrow'));
+  txt(g,60,254-16,'spread: STAGE1_13 (solid), STAGE1_14 (dashed)','dlab','start',cssv('--wide'));
+}
+
+function c5(){
+  const s=document.getElementById('c5'); s.textContent='';
+  const W=420,H=300,L=40,R=8,T=22,B=58;
+  const {g,pw,ph,Y}=frame(s,W,H,L,R,T,B,0,60,20,'% saved',v=>v);
+  const labs=[...new Set(D.fc.map(r=>r.lab))];
+  const short={'A 원본 8000/8000/6000':['Original','8k/8k/6k'],'B 균일 6000':['Uniform','6k'],'C 균일 5000':['Uniform','5k'],'D 혼합 9000/4000/5000':['Walk cheapest','9k/4k/5k']};
+  const step=pw/labs.length, bw=step*0.22;
+  labs.forEach((lab,i)=>{
+    const rows=[2,3,4].map(k=>D.fc.find(r=>r.lab===lab&&r.col===`최대 ${k}건`));
+    rows.forEach((r,j)=>{
+      const x=L+step*i+step*0.17+j*bw, y=Y(r.sn);
+      g.appendChild(el('rect',{x,y,width:bw-2,height:T+ph-y,rx:2,fill:cssv(KC[j+2])}));
+    });
+    const r4=rows[2]; txt(g,L+step*i+step*0.17+2*bw+bw/2-1,Y(r4.sn)-5,r4.sn.toFixed(0),'dlab','middle',cssv('--ink-2'));
+    const [a,b]=short[lab]||[lab,''];
+    txt(g,L+step*i+step/2,H-B+18,a,'ax'); txt(g,L+step*i+step/2,H-B+31,b,'ax');
+    const hit=el('rect',{x:L+step*i,y:T,width:step,height:ph,fill:'transparent'});
+    hit.addEventListener('mousemove',ev=>showTip(ev,`<b>fixed cost bike/walk/car: ${b||a}</b><br>`+rows.map((r,j)=>`max ${j+2}: −${r.sn.toFixed(1)}% · ${r.b} riders`).join('<br>')+
+      `<br>riders at max 4: bike ${r4.bk}, walk ${r4.w}, car ${r4.cr}`));
+    hit.addEventListener('mouseleave',hideTip); g.appendChild(hit);
+  });
+  txt(g,L+pw/2,H-8,'Rider fixed cost (bike / walk / car, won)','axl');
+}
+
+function table(){
+  const tb=document.getElementById('tb'); tb.innerHTML='';
+  D.main.forEach(r=>{
+    const tr=document.createElement('tr');
+    if(r.car) tr.className='base';
+    if(!r.car && r.s===1800 && r.k===4) tr.className='mark';
+    [mins(r.s)+' min', r.car?'1 · car only':r.k, fmt(r.c), r.car?'—':(r.sb<0.05?'0.0%':'−'+r.sb.toFixed(1)+'%'),
+     (r.car||r.k===1)?'—':'−'+r.sn.toFixed(1)+'%', r.b, r.bk, r.w, r.cr, r.mean.toFixed(1), r.slow.toFixed(1)]
+      .forEach(v=>{const td=document.createElement('td'); td.textContent=v; tr.appendChild(td);});
+    tb.appendChild(tr);
+  });
+}
+
+function build(){c1();c2();c3();c4();c5();table();}
+build();
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',build);
+</script>
+</body>
+</html>
