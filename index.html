@@ -6,485 +6,689 @@
 <title>Bundled Delivery: Cost vs Promise</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
+/* Layout follows the course sample: header → tiles → context → hero chart → supporting charts → findings → limits → table. */
 :root{
-  --ink:#16201b; --ink-2:#4a5a4f; --ink-3:#77887c;
-  --bg:#f7f9f6; --surface:#ffffff; --surface-2:#eef3ec; --line:#d9e3d8;
-  --brand:#14432A; --accent:#b96c06;
-  --k1:#9aa69d; --k2:#2a78d6; --k3:#1baf7a; --k4:#eb6834; --base:#4a5a4f;
-  --narrow:#2a78d6; --wide:#b96c06;
-  --grid:#e3ebe1;
-  --font-display:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --ink:#141a2b; --ink-2:#47506a; --ink-3:#7a8299;
+  --bg:#f6f7fb; --surface:#ffffff; --surface-2:#eef0f8; --line:#dde1ee;
+  --brand:#1f2a5c; --accent:#d9682b;
+  --k1:#9aa1b4; --k2:#4c84d9; --k3:#d9682b; --k4:#6a48b8; --car:#141a2b;
+  --walk:#2aa57a; --bike:#4c84d9; --carm:#9aa1b4;
+  --dense:#d9682b; --sparse:#4c84d9; --grid:#e6e9f2;
+  --font-display:"Source Serif 4",Georgia,serif;
   --font-body:"IBM Plex Sans","Helvetica Neue",Arial,sans-serif;
-  --font-mono:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
-  color-scheme:light;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
 }
 @media (prefers-color-scheme:dark){:root{
-  --ink:#eef2ec; --ink-2:#b4c2b6; --ink-3:#8b9a8d;
-  --bg:#141814; --surface:#1c211c; --surface-2:#232a23; --line:#333d33;
-  --brand:#9ec3a8; --accent:#e8a33f;
-  --k1:#7d887f; --k2:#3987e5; --k3:#199e70; --k4:#d95926; --base:#b4c2b6;
-  --narrow:#3987e5; --wide:#e8a33f;
-  --grid:#2c352c; color-scheme:dark;
+  --ink:#eceff7; --ink-2:#b8bfd3; --ink-3:#8b93aa;
+  --bg:#11141e; --surface:#191d2a; --surface-2:#222739; --line:#2f3549;
+  --brand:#a9b7f0; --accent:#f08a4b;
+  --k1:#7c849b; --k2:#6b9ff0; --k3:#f08a4b; --k4:#9c7ff0; --car:#eceff7;
+  --walk:#3cc493; --bike:#6b9ff0; --carm:#7c849b;
+  --dense:#f08a4b; --sparse:#6b9ff0; --grid:#272c3e; color-scheme:dark;
 }}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);
-     font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
-.wrap{max-width:1060px;margin:0 auto;padding:34px 20px 56px;display:flex;flex-direction:column;gap:26px}
-h1,h2,h3{font-family:var(--font-display);text-wrap:balance;margin:0}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+.wrap{max-width:1080px;margin:0 auto;padding:34px 20px 56px;display:flex;flex-direction:column;gap:24px}
+h1,h2,h3{font-family:var(--font-display);margin:0;text-wrap:balance}
 .eyebrow{font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);font-weight:600}
 h1{font-size:clamp(28px,4.4vw,40px);font-weight:700;line-height:1.14;letter-spacing:-.015em;margin-top:8px;color:var(--brand)}
-.lede{font-size:17px;color:var(--ink-2);max-width:66ch;margin-top:10px}
+.lede{font-size:17px;color:var(--ink-2);max-width:68ch;margin:10px 0 0}
 .meta{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-3);margin-top:14px;display:flex;flex-wrap:wrap;gap:6px 18px}
 .tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
-.tile{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:16px 16px 14px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.tile{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:4px;min-width:0}
 .tile.hero{background:var(--brand);border-color:var(--brand)}
 .tile .k{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
-.tile.hero .k{color:#bcd4c2}
+.tile.hero .k{color:#c7cff2}
 .tile .v{font-family:var(--font-display);font-size:30px;font-weight:700;line-height:1.05;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .tile.hero .v{color:#fff}
-.tile .n{font-size:12.5px;color:var(--ink-3);line-height:1.35}
-.tile.hero .n{color:#a9c4b0}
-@media (prefers-color-scheme:dark){.tile.hero{background:#1f3a29;border-color:#2c5038}}
-section{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:22px}
-section > h2,.chart-head h2{font-size:19px;font-weight:600;letter-spacing:-.01em}
-.sub{font-size:13.5px;color:var(--ink-3);margin-top:4px}
-.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));margin-top:16px;border-top:1px solid var(--line)}
-.fact{border-bottom:1px solid var(--line);padding:11px 22px 11px 0;display:flex;gap:12px;align-items:baseline}
-.fact b{font-family:var(--font-mono);font-size:13px;color:var(--accent);flex:0 0 auto;min-width:88px;font-weight:500}
+.tile .n{font-size:12.5px;color:var(--ink-3);line-height:1.4}
+.tile.hero .n{color:#c7cff2}
+@media (prefers-color-scheme:dark){.tile.hero{background:#2a356f;border-color:#2a356f}}
+section{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px}
+section>h2,.chart-head h2{font-size:19px;font-weight:600;letter-spacing:-.01em}
+.sub{font-size:13.5px;color:var(--ink-3);margin:4px 0 0}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));column-gap:28px;margin-top:16px;border-top:1px solid var(--line)}
+.fact{border-bottom:1px solid var(--line);padding:11px 0;display:flex;gap:14px;align-items:baseline}
+.fact b{font-family:var(--font-mono);font-size:13px;color:var(--accent);flex:0 0 112px;font-weight:500}
 .fact span{font-size:13.5px;color:var(--ink-2)}
-.chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:14px;flex-wrap:wrap}
-.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2)}
-.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
-.legend i.dash{height:0;border-top:2px dashed var(--base);border-radius:0;width:16px;vertical-align:3px}
-.plot{width:100%;overflow-x:auto;margin-top:6px}
-svg{display:block;width:100%;height:auto;max-width:100%}
+.note{font-size:13px;color:var(--ink-2);margin-top:14px;background:var(--surface-2);border-radius:10px;padding:12px 14px}
+.chart-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--ink-2)}
+.legend i{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:3px}
+.legend i.sq{width:11px;height:11px;border-radius:3px;vertical-align:-1px}
+.legend i.dash{background:repeating-linear-gradient(90deg,var(--car) 0 4px,transparent 4px 7px)!important}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;background:var(--surface-2);gap:2px}
+.seg button{border:0;background:transparent;color:var(--ink-2);font:500 12.5px var(--font-body);padding:5px 12px;border-radius:999px;cursor:pointer}
+.seg button[aria-pressed=true]{background:var(--surface);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.plot{width:100%;margin-top:8px}
+svg{display:block;width:100%;height:auto}
 .ax{font-family:var(--font-mono);font-size:10.5px;fill:var(--ink-3)}
-.axl{font-size:11.5px;fill:var(--ink-3);font-weight:500;font-family:var(--font-body)}
+.axl{font-size:11.5px;fill:var(--ink-3);font-weight:500}
 .dlab{font-family:var(--font-mono);font-size:10.5px;font-weight:500}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-@media(max-width:860px){.two{grid-template-columns:1fr}.tiles{grid-template-columns:repeat(2,1fr)}}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px}
+.two>section{min-width:0}
+.explorer{display:grid;grid-template-columns:auto 1fr;gap:18px;margin-top:16px;padding-top:16px;border-top:1px solid var(--line);align-items:start}
+.ctl{display:flex;flex-direction:column;gap:10px}
+.ctl label{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);font-weight:600}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.kpi{background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.kpi .k{font-size:11px;color:var(--ink-3)}
+.kpi .v{font-family:var(--font-display);font-size:22px;font-weight:700;font-variant-numeric:tabular-nums}
+.kpi .n{font-size:11.5px;color:var(--ink-3)}
+@media(max-width:860px){.two,.explorer{grid-template-columns:1fr}.tiles{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:460px){.tiles{grid-template-columns:1fr}}
-.tip{position:fixed;pointer-events:none;opacity:0;transition:opacity .12s;background:var(--brand);color:#fff;border-radius:8px;padding:8px 11px;font-size:12.5px;font-family:var(--font-mono);line-height:1.5;z-index:20;max-width:250px;box-shadow:0 6px 20px rgba(0,0,0,.22)}
-@media (prefers-color-scheme:dark){.tip{background:#2c5038}}
-.tip b{color:#f0c686;font-weight:500}
+.tip{position:fixed;pointer-events:none;opacity:0;transition:opacity .12s;background:var(--brand);color:#fff;border-radius:8px;padding:8px 11px;font-size:12.5px;font-family:var(--font-mono);line-height:1.5;z-index:20;max-width:260px;box-shadow:0 6px 20px rgba(0,0,0,.22)}
+@media (prefers-color-scheme:dark){.tip{background:#2a356f}}
+.tip b{color:#ffc79f;font-weight:500}
 ol.find{list-style:none;counter-reset:f;padding:0;margin:14px 0 0;display:flex;flex-direction:column;gap:14px}
 ol.find li{counter-increment:f;display:flex;gap:14px}
 ol.find li::before{content:counter(f);font-family:var(--font-display);font-weight:700;font-size:13px;color:#fff;background:var(--accent);min-width:24px;height:24px;border-radius:50%;display:grid;place-items:center;flex:0 0 auto;margin-top:2px}
 ol.find h3{font-size:15.5px;font-weight:600;margin-bottom:3px}
 ol.find p{margin:0;font-size:14px;color:var(--ink-2)}
-ul.plain{margin:14px 0 0;padding-left:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+ul.plain{margin:14px 0 0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
 ul.plain li{display:flex;gap:10px;font-size:14px;color:var(--ink-2)}
 ul.plain li::before{content:"";flex:0 0 auto;width:6px;height:6px;border-radius:50%;background:var(--accent);margin-top:8px}
-table{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums;font-family:var(--font-mono)}
+ul.plain b{color:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:12.5px;font-variant-numeric:tabular-nums;font-family:var(--font-mono)}
 .tbl{overflow-x:auto;margin-top:14px}
-th,td{text-align:right;padding:7px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
-th{font-family:var(--font-body);font-size:11px;letter-spacing:.07em;text-transform:uppercase;color:var(--ink-3);font-weight:600;border-bottom:1px solid var(--ink-3)}
-th:first-child,td:first-child{text-align:left}
-tr.mark td{background:var(--surface-2);font-weight:500}
-tr.base td{color:var(--ink-3)}
+th,td{text-align:right;padding:6px 9px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font-family:var(--font-body);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);font-weight:600;border-bottom:1px solid var(--ink-3)}
+th:first-child,td:first-child,th:nth-child(2),td:nth-child(2){text-align:left}
+table.cmp th,table.cmp td{padding:6px 6px}
+tr.mark td{background:var(--surface-2);font-weight:600}
+tr.gap td{border-top:2px solid var(--line)}
 caption{caption-side:bottom;text-align:left;font-family:var(--font-body);font-size:12.5px;color:var(--ink-3);padding-top:10px}
 footer{font-size:12.5px;color:var(--ink-3);border-top:1px solid var(--line);padding-top:16px}
-footer a,.src a{color:var(--ink-2);text-decoration-color:var(--line)}
-.src{font-size:12.5px;color:var(--ink-3);margin-top:14px;line-height:1.7}
-@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+.src{font-size:12.5px;color:var(--ink-3);margin-top:12px;line-height:1.8}
+.src a{color:var(--ink-2)}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.hero-head{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);gap:26px;align-items:center}
+.illus{max-width:400px;justify-self:end;width:100%}
+.team{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;align-items:center}
+.team .tname{background:var(--brand);color:#fff;font-family:var(--font-display);font-weight:700;font-size:14px;padding:6px 13px;border-radius:999px;letter-spacing:.01em}
+@media (prefers-color-scheme:dark){.team .tname{background:#2a356f}}
+.team .mem{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:13px;color:var(--ink)}
+.team .mem b{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:600;margin-right:7px}
+.illus .route{stroke-dasharray:7 7;animation:dash 2.2s linear infinite}
+.illus .rider{animation:bob 1.1s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+.illus .pin{animation:pop 2.6s ease-in-out infinite;transform-box:fill-box;transform-origin:bottom}
+.illus .pin.p2{animation-delay:.35s}.illus .pin.p3{animation-delay:.7s}
+.illus .speed line{animation:speed 0.9s linear infinite}
+@keyframes dash{to{stroke-dashoffset:-28}}
+@keyframes bob{50%{transform:translateY(-2.5px)}}
+@keyframes pop{0%,70%,100%{transform:translateY(0)}80%{transform:translateY(-5px)}}
+@keyframes speed{0%{opacity:0;transform:translateX(8px)}40%{opacity:1}100%{opacity:0;transform:translateX(-10px)}}
+.scn{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:22px;margin-top:16px;align-items:start}
+.pcards{display:flex;flex-direction:column;gap:10px}
+.pcard{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--surface);position:relative}
+.pcard.best{border:2px solid var(--accent);background:linear-gradient(0deg,var(--surface),var(--surface)),var(--surface)}
+.pcard .hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap}
+.pcard .nm{font-family:var(--font-display);font-weight:600;font-size:15.5px}
+.pcard .pr{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-3)}
+.pcard .badge{position:absolute;top:-10px;right:12px;background:var(--accent);color:#fff;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:2px 9px;border-radius:999px}
+.pcard .row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.pcard .m .k{font-size:10.5px;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em}
+.pcard .m .v{font-family:var(--font-mono);font-size:14px;font-weight:500;font-variant-numeric:tabular-nums}
+.pcard .m .d{font-family:var(--font-mono);font-size:11px}
+.d.good{color:#1f9d6b}.d.bad{color:#d0473a}.d.flat{color:var(--ink-3)}
+@media (prefers-color-scheme:dark){.d.good{color:#43c793}.d.bad{color:#f07466}}
+@media(max-width:860px){.hero-head,.scn{grid-template-columns:1fr}.illus{justify-self:center;max-width:320px}.pcard .row{grid-template-columns:repeat(2,1fr)}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <header>
-    <div class="eyebrow">Logistics Innovation Theory · Team project</div>
-    <h1>How much does bundling cut delivery cost — and who pays for it in waiting time?</h1>
-    <p class="lede">Korean delivery apps now sell two products for the same meal: 한집배달, where one rider
-      carries one order straight to you, and a cheaper bundled tier (배민 알뜰배달, 쿠팡이츠 세이브배달).
-      We asked a narrow version of the question this raises: for the same 100 orders, how much operating
-      cost does bundling save as we raise the maximum bundle size and the delivery promise — and what
-      happens to delivery time?</p>
-    <div class="meta">
-      <span>instance STAGE1_2 · K = 100 orders</span>
-      <span>course bundling algorithm + Gurobi selection</span>
-      <span>35 main scenarios · max bundle 1–4 × slack 15–45 min</span>
-      <span>+ 20 cost-structure runs · + 100 cross-instance runs</span>
-    </div>
-  </header>
-
-  <div class="tiles">
-    <div class="tile hero">
-      <div class="k">Headline</div>
-      <div class="v">−57.2%</div>
-      <div class="n">cost per order with bundles of up to 4, against one car per order — 7,244 → 3,099 won at the original 30-min slack</div>
-    </div>
-    <div class="tile">
-      <div class="k">Pairs do most of it</div>
-      <div class="v">68–84%</div>
-      <div class="n">of the total bundling saving comes from allowing just 2-order bundles</div>
-    </div>
-    <div class="tile">
-      <div class="k">Slowest 10% wait</div>
-      <div class="v">+1.6 vs +21.5</div>
-      <div class="n">minutes: bundles 2→4 at a fixed promise, versus promise 15→45 min at max 4</div>
-    </div>
-    <div class="tile">
-      <div class="k">Baseline</div>
-      <div class="v">7,244</div>
-      <div class="n">won per order · one car per order, no bundling — the plan we must beat</div>
-    </div>
+<header class="hero-head">
+<div>
+  <div class="eyebrow">동북아물류정보혁신론 · Team project · <span style="color:var(--brand)">Team Norway</span></div>
+  <h1>Bundling halves delivery cost. The promised delivery time decides how much, and how long customers wait.</h1>
+  <p class="lede">Korean delivery apps sell two products for the same meal: 한집배달, one rider per order, and a cheaper
+    bundled tier (배민 알뜰배달) capped at three orders per rider. For the same 100 orders, we varied the maximum bundle
+    size and the delivery-time slack and measured operating cost, rider count, waiting time and computation time,
+    then applied the results to a lunch-delivery decision.</p>
+  <div class="meta">
+    <span>instance STAGE1_2 · K = 100 orders</span>
+    <span>course algorithm: bundle generation + Gurobi set partitioning</span>
+    <span>max bundle 1–4 × slack 15–45 min</span>
+    <span>125 scenarios · all pass solution_check · all Gurobi optimal</span>
   </div>
-
-  <section>
-    <h2>Why we asked this</h2>
-    <p class="sub">The two-tier product is real, and so is the trade-off customers are told about: cheaper, but slower.</p>
-    <div class="facts">
-      <div class="fact"><b>Apr 2023</b><span>배민 launches 알뜰배달: orders on similar routes are bundled; 한집배달 keeps one rider per order</span></div>
-      <div class="fact"><b>6,000 → 1,820</b><span>won: 한집배달 delivery fee vs average 알뜰배달 fee paid by customers (June 2023) — about one third</span></div>
-      <div class="fact"><b>max 3</b><span>orders a rider could accept at once on 알뜰배달, per an industry official (2023)</span></div>
-      <div class="fact"><b>Jul 2023</b><span>Restaurant owners report bundled orders arriving late; slower delivery is the stated price of the discount</span></div>
-      <div class="fact"><b>Mar–Apr 2024</b><span>쿠팡이츠 and 배민 make the <em>bundled</em> tier free in major areas; single-order delivery stays paid</span></div>
-      <div class="fact"><b>Mar 2026</b><span>배민 raises 한집배달 tips by distance (+500 to +1,500 won) in a trial — the price gap keeps moving</span></div>
-    </div>
-    <p class="src">What we test: bundling lowers the operating cost of serving the same orders, and the size of that saving depends on
-      (a) how many orders a rider may carry and (b) how much later than a direct trip the customer is promised the food.
-      We model the operation, not the price: the fee gap is set by promotions and strategy as well as by cost.</p>
-  </section>
-
-  <section>
-    <div class="chart-head">
-      <div>
-        <h2>Cost per order as bundles grow and the promise loosens</h2>
-        <p class="sub">Same 100 orders. Slack = minutes the customer may wait beyond a direct car trip after the food is ready. 30 min is the original data.</p>
-      </div>
-      <div class="legend">
-        <span><i style="background:var(--k1)"></i>Max 1 (no bundling)</span>
-        <span><i style="background:var(--k2)"></i>Max 2</span>
-        <span><i style="background:var(--k3)"></i>Max 3</span>
-        <span><i style="background:var(--k4)"></i>Max 4</span>
-        <span><i class="dash"></i>One car per order</span>
-      </div>
-    </div>
-    <div class="plot"><svg id="c1" viewBox="0 0 760 340" role="img"
-      aria-label="Without bundling cost stays near 7,240 won per order. Allowing pairs drops it to about 4,300; allowing 3 and 4 orders drops it further, more so as slack grows, reaching 2,809 won at 45 minutes."></svg></div>
-  </section>
-
-  <div class="two">
-    <section>
-      <div class="chart-head">
-        <div><h2>What each extra order in a bundle buys</h2>
-        <p class="sub">Extra saving from raising the cap one step, by slack.</p></div>
-        <div class="legend">
-          <span><i style="background:var(--k2)"></i>1→2</span>
-          <span><i style="background:var(--k3)"></i>2→3</span>
-          <span><i style="background:var(--k4)"></i>3→4</span>
-        </div>
-      </div>
-      <div class="plot"><svg id="c2" viewBox="0 0 420 300" role="img"
-        aria-label="The 1 to 2 step saves 37 to 42 percent at every slack. The 3 to 4 step saves 0.1 percent at 15 minutes and 14 percent at 45 minutes."></svg></div>
-    </section>
-    <section>
-      <div class="chart-head">
-        <div><h2>The promise sets the wait</h2>
-        <p class="sub">Average delivery time of the slowest 10% of orders.</p></div>
-        <div class="legend">
-          <span><i style="background:var(--k1)"></i>Max 1</span>
-          <span><i style="background:var(--k2)"></i>Max 2</span>
-          <span><i style="background:var(--k3)"></i>Max 3</span>
-          <span><i style="background:var(--k4)"></i>Max 4</span>
-        </div>
-      </div>
-      <div class="plot"><svg id="c3" viewBox="0 0 420 300" role="img"
-        aria-label="For bundled plans the slowest-10 percent time rises from about 47 minutes at 15 minutes slack to about 69 to 72 minutes at 45 minutes; the lines for 2, 3 and 4 orders stay close together."></svg></div>
-    </section>
+  <div class="team" aria-label="Team Norway members">
+    <span class="tname">Team Norway</span>
+    <span class="mem"><b>Team Leader</b>요세피네 후프만</span>
+    <span class="mem"><b>Data Scientist</b>김민석</span>
+    <span class="mem"><b>Business Analysts</b>유예찬 · 박도원</span>
+    <span class="mem"><b>Data Analysts</b>왕예원 · 장지유</span>
   </div>
+</div>
+<div class="illus" aria-hidden="true">
+<svg viewBox="0 0 400 300">
+  <circle cx="210" cy="150" r="138" fill="var(--surface-2)"/>
+  <g opacity=".9">
+    <rect x="44" y="150" width="42" height="92" rx="4" fill="var(--line)"/>
+    <rect x="90" y="176" width="34" height="66" rx="4" fill="var(--line)"/>
+    <rect x="300" y="160" width="40" height="82" rx="4" fill="var(--line)"/>
+    <rect x="344" y="188" width="26" height="54" rx="4" fill="var(--line)"/>
+    <g fill="var(--surface)" opacity=".8">
+      <rect x="52" y="160" width="9" height="9" rx="1.5"/><rect x="69" y="160" width="9" height="9" rx="1.5"/>
+      <rect x="52" y="178" width="9" height="9" rx="1.5"/><rect x="69" y="178" width="9" height="9" rx="1.5"/>
+      <rect x="52" y="196" width="9" height="9" rx="1.5"/><rect x="69" y="196" width="9" height="9" rx="1.5"/>
+      <rect x="98" y="186" width="8" height="8" rx="1.5"/><rect x="110" y="186" width="8" height="8" rx="1.5"/>
+      <rect x="308" y="170" width="9" height="9" rx="1.5"/><rect x="324" y="170" width="9" height="9" rx="1.5"/>
+      <rect x="308" y="188" width="9" height="9" rx="1.5"/><rect x="324" y="188" width="9" height="9" rx="1.5"/>
+      <rect x="351" y="198" width="7" height="7" rx="1.5"/>
+    </g>
+  </g>
+  <path d="M20 250 Q 210 232 392 248" stroke="var(--line)" stroke-width="16" fill="none" stroke-linecap="round"/>
+  <path class="route" d="M64 118 C 110 40, 160 116, 200 72 S 286 46, 322 104" stroke="var(--accent)" stroke-width="3" fill="none" stroke-linecap="round"/>
+  <g class="pin p1" transform="translate(64 118)"><path d="M0 0 C -11 -13 -11 -28 0 -28 C 11 -28 11 -13 0 0 Z" fill="var(--k2)"/><circle cy="-18" r="6.5" fill="#fff"/><text y="-15" text-anchor="middle" font-size="9" font-weight="700" fill="var(--k2)" font-family="var(--font-body)">1</text></g>
+  <g class="pin p2" transform="translate(200 72)"><path d="M0 0 C -11 -13 -11 -28 0 -28 C 11 -28 11 -13 0 0 Z" fill="var(--accent)"/><circle cy="-18" r="6.5" fill="#fff"/><text y="-15" text-anchor="middle" font-size="9" font-weight="700" fill="var(--accent)" font-family="var(--font-body)">2</text></g>
+  <g class="pin p3" transform="translate(322 104)"><path d="M0 0 C -11 -13 -11 -28 0 -28 C 11 -28 11 -13 0 0 Z" fill="var(--k4)"/><circle cy="-18" r="6.5" fill="#fff"/><text y="-15" text-anchor="middle" font-size="9" font-weight="700" fill="var(--k4)" font-family="var(--font-body)">3</text></g>
+  <g transform="translate(352 46)">
+    <circle r="23" fill="var(--surface)" stroke="var(--brand)" stroke-width="3"/>
+    <path d="M0 0 L0 -14 A14 14 0 0 1 12 7 Z" fill="var(--accent)" opacity=".35"/>
+    <line x1="0" y1="0" x2="0" y2="-13" stroke="var(--brand)" stroke-width="2.6" stroke-linecap="round"/>
+    <line x1="0" y1="0" x2="9" y2="5" stroke="var(--brand)" stroke-width="2.6" stroke-linecap="round"/>
+    <circle r="2.6" fill="var(--brand)"/>
+    <text y="40" text-anchor="middle" font-size="11" font-weight="600" fill="var(--ink-2)" font-family="var(--font-mono)">+30 min</text>
+  </g>
+  <ellipse cx="212" cy="257" rx="78" ry="6" fill="var(--ink)" opacity=".12"/>
+  <g class="speed" stroke="var(--ink-3)" stroke-width="3" stroke-linecap="round">
+    <line x1="96" y1="186" x2="120" y2="186"/><line x1="104" y1="202" x2="124" y2="202" style="animation-delay:.3s"/><line x1="92" y1="218" x2="118" y2="218" style="animation-delay:.6s"/>
+  </g>
+  <g class="rider">
+    <g stroke="#7a4a1c" stroke-width="1.4">
+      <rect x="132" y="196" width="40" height="20" rx="3" fill="#f2b65c"/>
+      <rect x="135" y="175" width="36" height="20" rx="3" fill="#ee9f4e"/>
+      <rect x="138" y="155" width="32" height="19" rx="3" fill="#e88a40"/>
+    </g>
+    <g font-family="var(--font-mono)" font-size="10" font-weight="700" fill="#5b3412" text-anchor="middle">
+      <text x="152" y="210">1</text><text x="153" y="189">2</text><text x="154" y="168">3</text>
+    </g>
+    <rect x="168" y="208" width="44" height="13" rx="6.5" fill="var(--brand)"/>
+    <rect x="160" y="221" width="104" height="14" rx="7" fill="var(--brand)"/>
+    <line x1="246" y1="224" x2="258" y2="180" stroke="var(--brand)" stroke-width="6" stroke-linecap="round"/>
+    <line x1="250" y1="179" x2="268" y2="176" stroke="var(--ink)" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="268" cy="196" r="5" fill="#ffd36b" stroke="var(--brand)" stroke-width="2"/>
+    <line x1="196" y1="212" x2="230" y2="222" stroke="var(--ink-2)" stroke-width="11" stroke-linecap="round"/>
+    <line x1="230" y1="222" x2="236" y2="236" stroke="var(--ink-2)" stroke-width="9" stroke-linecap="round"/>
+    <rect x="186" y="150" width="28" height="64" rx="13" fill="var(--accent)" transform="rotate(14 200 182)"/>
+    <line x1="214" y1="166" x2="252" y2="180" stroke="var(--accent)" stroke-width="9" stroke-linecap="round"/>
+    <circle cx="254" cy="180" r="5" fill="#f1c9a5"/>
+    <circle cx="214" cy="137" r="17" fill="var(--brand)"/>
+    <path d="M214 130 h14 a5 5 0 0 1 5 5 v2 a5 5 0 0 1 -5 5 h-14 z" fill="#bfe1ff"/>
+    <circle cx="176" cy="240" r="16" fill="var(--ink)"/><circle cx="176" cy="240" r="6" fill="var(--surface)"/>
+    <circle cx="256" cy="240" r="16" fill="var(--ink)"/><circle cx="256" cy="240" r="6" fill="var(--surface)"/>
+  </g>
+</svg>
+</div>
+</header>
 
-  <div class="two">
-    <section>
-      <div class="chart-head">
-        <div><h2>Same pattern in other data, different size</h2>
-        <p class="sub">Saving vs no bundling, max 4 — four 100-order instances.</p></div>
-        <div class="legend">
-          <span><i style="background:var(--narrow)"></i>Dense (~7×9 km)</span>
-          <span><i style="background:var(--wide)"></i>Spread (~16×24 km)</span>
-        </div>
-      </div>
-      <div class="plot"><svg id="c4" viewBox="0 0 420 300" role="img"
-        aria-label="Dense instances save 44 to 60 percent; spread-out instances save 31 to 47 percent; all rise with slack."></svg></div>
-    </section>
-    <section>
-      <div class="chart-head">
-        <div><h2>Does it depend on rider fixed cost?</h2>
-        <p class="sub">Saving vs no bundling at 30-min slack, four cost structures from the course data.</p></div>
-        <div class="legend">
-          <span><i style="background:var(--k2)"></i>Max 2</span>
-          <span><i style="background:var(--k3)"></i>Max 3</span>
-          <span><i style="background:var(--k4)"></i>Max 4</span>
-        </div>
-      </div>
-      <div class="plot"><svg id="c5" viewBox="0 0 420 300" role="img"
-        aria-label="With bundles up to 4, savings are 57 to 60 percent for three cost structures and 50 percent when walking is the cheapest rider."></svg></div>
-    </section>
+<div class="tiles">
+  <div class="tile hero">
+    <div class="k">Headline · max 3, 30-min slack</div>
+    <div class="v" id="t-hero"></div>
+    <div class="n" id="t-hero-n"></div>
   </div>
-
-  <section>
-    <h2>What we found</h2>
-    <ol class="find">
-      <li><div>
-        <h3>Pairs do most of the work</h3>
-        <p>Allowing 2-order bundles cuts cost per order by 37–42% at every slack we tried, which is 68–84% of everything
-          bundling achieves. Riders fall from 100 to about 50. The saving is almost entirely rider fixed cost: choosing cheaper
-          vehicle types without bundling saves only 0–0.2% here.</p>
-      </div></li>
-      <li><div>
-        <h3>Bigger bundles pay only when the promise is loose</h3>
-        <p>Going from 3 to 4 orders adds 0.1% at 15 min of slack, 8.5% at the original 30 min and 14.2% at 45 min. With a tight
-          promise there are almost no feasible 4-order routes. The real 알뜰배달 cap of 3 orders sits where the extra saving is small
-          unless the promise is generous.</p>
-      </div></li>
-      <li><div>
-        <h3>The wait is set by the promise, not the bundle size</h3>
-        <p>At a fixed 30-min slack, growing bundles from 2 to 4 adds 1.6 min to the slowest 10% of orders. At a fixed cap of 4,
-          stretching the promise from 15 to 45 min adds 21.5 min. Each extra minute of waiting buys less: about 110 won per order
-          between 15 and 20 min of slack, 20–30 won beyond 35 min. A cost-minimising dispatcher uses whatever slack it is given.</p>
-      </div></li>
-      <li><div>
-        <h3>The direction holds; the size depends on density</h3>
-        <p>In four 100-order instances the pattern repeats, but dense areas (~7×9 km) save 44–60% while spread-out areas
-          (~16×24 km) save 31–47%, and 3→4 adds at most 4.4% there. Across four rider cost structures the saving stays at 50–60%;
-          it is smallest when walking, the slowest and smallest vehicle, is the cheapest to dispatch.</p>
-      </div></li>
-    </ol>
-  </section>
-
-  <section>
-    <h2>What we would recommend</h2>
-    <ul class="plain">
-      <li>Treat the delivery promise as the main design lever for a bundled tier. It decides both how much bundling saves and how long the slowest customers wait.</li>
-      <li>Allow pairs everywhere: they capture most of the saving at little extra wait. Allow 3–4 orders only where orders are dense and the promise is at least about 25–30 min beyond a direct trip.</li>
-      <li>In spread-out areas, cap bundles at 2–3: the fourth order adds under 5% saving.</li>
-      <li>The real fee gap (6,000 vs 1,820 won, about −70%) points the same way as our modelled cost gap (−53% at a cap of 3, 30-min slack) but is larger — consistent with reports that promotions subsidise the bundled tier.</li>
-    </ul>
-  </section>
-
-  <section>
-    <h2>What this does not show</h2>
-    <ul class="plain">
-      <li>The optimum is over the candidate bundles the course algorithm generates (up to 4 orders), not over every possible plan.</li>
-      <li>The model minimises cost only. It uses all the slack it is given and even sends slow walkers for a 0.2% saving; a real dispatcher also values speed.</li>
-      <li>Demand is frozen. A different promise or price would change how many orders arrive and therefore the bundling opportunity.</li>
-      <li>Four instances, two per area type. Area size and shop-to-customer distance grow together in them, so we cannot say which one drives the difference.</li>
-      <li>Model cost is rider fixed cost plus distance cost. Platform rider pay, commissions and promotions are not modelled, so the cost gap is not a price recommendation.</li>
-      <li>Loose promises are computationally expensive: candidates grow from 1,388 to 234,207 between 15 and 45 min. The course default of 100 s cut generation short at 40–45 min, so we raised the generation limit (up to 30 min per slack) and checked that all other results were unchanged.</li>
-    </ul>
-  </section>
-
-  <section>
-    <h2>All main scenarios</h2>
-    <p class="sub">STAGE1_2, 100 orders. Cost in won per order; times in minutes (order placed → delivered).</p>
-    <div class="tbl">
-      <table>
-        <caption>Highlighted: the original data (30-min slack) with the course default cap of 4. Grey rows: one car per order (baseline).
-          Every row passed the course solution_check (all 100 orders delivered once, capacity, deadlines, rider limits) and Gurobi returned optimal.</caption>
-        <thead><tr>
-          <th>Slack</th><th>Max bundle</th><th>Cost / order</th><th>vs baseline</th><th>vs no bundling</th>
-          <th>Riders</th><th>Bike</th><th>Walk</th><th>Car</th><th>Mean time</th><th>Slowest 10%</th>
-        </tr></thead>
-        <tbody id="tb"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <footer>
-    <strong>Method.</strong> The course algorithm (myalgorithm.py) generates candidate bundles of 1–4 orders, checking capacity,
-    pickups-before-deliveries and every deadline, and Gurobi then picks the cheapest set that serves each order exactly once within
-    rider limits. We changed only inputs and the candidate filter, in a marked copy of the code: deadlines are recomputed as
-    ready time + direct car time + slack (slack 30 min reproduces the original file exactly); the maximum bundle size is enforced by
-    dropping larger candidates before Gurobi; the baseline sets bike and walk availability to zero with a cap of 1. Cost = rider fixed
-    cost + distance ÷ 100 × variable cost. Times are in seconds in the data (speed in m/s) and shown in minutes. Every solution was
-    re-checked with the course util.solution_check. Raw outputs: summary.csv, orders.csv, fixed_cost_summary.csv, robust_summary.csv.
-    <div class="src">Sources —
-      <a href="https://www.inews24.com/view/1583441" target="_blank" rel="noopener">아이뉴스24, 배민 알뜰배달 vs 한집배달 (2023.4)</a> ·
-      <a href="https://www.inews24.com/view/1612741" target="_blank" rel="noopener">아이뉴스24, 알뜰배달 평균 배달비 1,820원 (2023.7)</a> ·
-      <a href="https://economist.co.kr/article/view/ecn202306150042" target="_blank" rel="noopener">이코노미스트, 알뜰배달 최대 3건 (2023.6)</a> ·
-      <a href="https://v.daum.net/v/20230719185125862" target="_blank" rel="noopener">헤럴드경제, 알뜰배달 배달 지연 (2023.7)</a> ·
-      <a href="https://biz.sbs.co.kr/amp/article/20000161955" target="_blank" rel="noopener">SBS Biz, 쿠팡이츠 묶음배달 무료 (2024.3)</a> ·
-      <a href="https://byline.network/2024/04/01_981662/" target="_blank" rel="noopener">바이라인네트워크, 배민 알뜰배달 무료 (2024.4)</a> ·
-      <a href="https://biz.sbs.co.kr/amp/article/20000292449" target="_blank" rel="noopener">SBS Biz, 배민 한집배달료 거리별 조정 (2026.2)</a>
-    </div>
-  </footer>
+  <div class="tile">
+    <div class="k">Pairs do most of it</div>
+    <div class="v" id="t-pair"></div>
+    <div class="n">of the max-3 saving comes from allowing just 2-order bundles</div>
+  </div>
+  <div class="tile">
+    <div class="k">Slowest 10% wait</div>
+    <div class="v">+1.6 vs +21.5</div>
+    <div class="n">minutes: bundle 2→4 at a fixed promise, vs promise 15→45 min at max 4</div>
+  </div>
+  <div class="tile">
+    <div class="k">Computation</div>
+    <div class="v" id="t-comp"></div>
+    <div class="n" id="t-comp-n"></div>
+  </div>
 </div>
 
+<section>
+  <h2>Why we asked this</h2>
+  <p class="sub">The two products differ in price and speed. These are the facts that made the trade-off worth testing.</p>
+  <div class="facts">
+    <div class="fact"><b>Apr 2023</b><span>배민 launches 알뜰배달: orders on similar routes are bundled; 한집배달 keeps one rider per order</span></div>
+    <div class="fact"><b>max 3</b><span>orders per rider on 알뜰배달, according to a Baemin official (2023)</span></div>
+    <div class="fact"><b>~6,000 won</b><span>total 한집배달 delivery fee</span></div>
+    <div class="fact"><b>4,320–5,120</b><span>won total 알뜰배달 fee: customer pays 1,820 on average, the restaurant 2,500–3,300 (excl. VAT). About 15–28% below 한집배달</span></div>
+    <div class="fact"><b>Jul 2023</b><span>Restaurant owners report bundled orders arriving late. Slower delivery is the price of the discount</span></div>
+    <div class="fact"><b>60–85%</b><span>of operating cost in our model is the fixed cost per rider. Fewer riders, lower cost: this is why bundling pays</span></div>
+  </div>
+  <p class="note"><b>Our question.</b> For the same 100 orders, how does the operating-cost saving from bundling change with the
+    maximum bundle size and the delivery-time slack? Slack is how much later than a direct car trip an order may arrive:
+    deadline = ready time + direct car time + slack. A 30-minute slack reproduces the instance's original deadlines exactly.</p>
+</section>
+
+<section>
+  <div class="chart-head">
+    <div>
+      <h2>Cost per order as bundles grow and the promise loosens</h2>
+      <p class="sub">Same 100 orders. Each line is a bundle cap; the dashed line is one car per order.</p>
+    </div>
+    <div class="seg" role="group" aria-label="Metric">
+      <button type="button" data-m="cost" aria-pressed="true">Cost per order</button>
+      <button type="button" data-m="sv" aria-pressed="false">Saving vs no bundling</button>
+    </div>
+  </div>
+  <div class="legend" style="margin-top:10px">
+    <span><i style="background:var(--k1)"></i>max 1 (no bundling)</span>
+    <span><i style="background:var(--k2)"></i>max 2</span>
+    <span><i style="background:var(--k3);height:4px"></i>max 3 (headline)</span>
+    <span><i style="background:var(--k4)"></i>max 4</span>
+    <span id="lg-car"><i class="dash"></i>all-car baseline</span>
+  </div>
+  <div class="plot"><svg id="c1" viewBox="0 0 760 330" role="img" aria-label="Cost per order falls as the bundle cap and slack rise."></svg></div>
+  <div class="explorer">
+    <div class="ctl">
+      <label>Slack (min)</label>
+      <div class="seg" id="ex-s"></div>
+      <label>Max bundle</label>
+      <div class="seg" id="ex-k"></div>
+    </div>
+    <div class="kpis" id="ex-out"></div>
+  </div>
+</section>
+
+<section>
+  <div class="eyebrow">Applying the results · scenario</div>
+  <h2 style="margin-top:6px">Lunch complaints: shrink the bundle, or shorten the promise?</h2>
+  <p class="sub">A fictional platform, Norway Delivery, serves 100 lunch orders in an office district with bundles of up to 3 and a 30-minute slack.
+    Every order meets its deadline, yet customers complain that lunch arrives at the end of their break. A real echo: restaurant owners reported bundled
+    알뜰배달 orders arriving late (Jul 2023). Numbers are from the STAGE1_2 runs above.</p>
+  <div class="scn">
+    <div class="pcards" id="pcards"></div>
+    <div>
+      <div class="chart-head"><div><h3 style="font-size:15.5px">What each extra won buys</h3>
+        <p class="sub">Extra cost per order vs minutes cut from the slowest 10% wait, compared with the current policy.</p></div></div>
+      <div class="plot"><svg id="c7" viewBox="0 0 420 290" role="img" aria-label="Shortening the promise cuts about ten minutes for 635 won; reducing the bundle cuts under one minute for 915 won."></svg></div>
+    </div>
+  </div>
+  <p class="note" id="scn-note"></p>
+</section>
+
+<div class="two">
+  <section>
+    <div class="chart-head"><div>
+      <h2>What each extra order in a bundle buys</h2>
+      <p class="sub">Extra cost saving from raising the cap by one, by slack.</p></div>
+      <div class="legend"><span><i class="sq" style="background:var(--k2)"></i>1→2</span><span><i class="sq" style="background:var(--k3)"></i>2→3</span><span><i class="sq" style="background:var(--k4)"></i>3→4</span></div>
+    </div>
+    <div class="plot"><svg id="c2" viewBox="0 0 440 300" role="img" aria-label="The 1 to 2 step saves 37 to 42 percent at every slack; 3 to 4 grows from 0.1 to 14 percent."></svg></div>
+  </section>
+  <section>
+    <div class="chart-head"><div>
+      <h2>The promise sets the wait</h2>
+      <p class="sub">Mean wait of the slowest 10% of customers (order → arrival).</p></div>
+      <div class="legend"><span><i style="background:var(--k2)"></i>max 2</span><span><i style="background:var(--k3)"></i>max 3</span><span><i style="background:var(--k4)"></i>max 4</span><span><i class="dash"></i>all-car</span></div>
+    </div>
+    <div class="plot"><svg id="c3" viewBox="0 0 440 300" role="img" aria-label="Waiting time rises with slack; lines for different bundle caps lie close together."></svg></div>
+  </section>
+</div>
+
+<div class="two">
+  <section>
+    <div class="chart-head"><div>
+      <h2>Faster riders carry the big bundles</h2>
+      <p class="sub">Orders delivered by mode at 30-min slack. Speeds: bike 19, car 15, walk 4.8 km/h.</p></div>
+      <div class="legend"><span><i class="sq" style="background:var(--walk)"></i>Walk</span><span><i class="sq" style="background:var(--bike)"></i>Bike</span><span><i class="sq" style="background:var(--carm)"></i>Car</span></div>
+    </div>
+    <div class="plot"><svg id="c4" viewBox="0 0 440 300" role="img" aria-label="As the cap rises, bikes take over orders from cars."></svg></div>
+  </section>
+  <section>
+    <div class="chart-head"><div>
+      <h2>Can it be solved in time?</h2>
+      <p class="sub">Candidate generation time, log scale (Colab). Dashed: 100 s limit of the course test script.</p></div>
+      <div class="legend"><span><i style="background:var(--k3)"></i>1–3-order candidates</span><span><i style="background:var(--k4)"></i>1–4-order candidates</span></div>
+    </div>
+    <div class="plot"><svg id="c5" viewBox="0 0 440 300" role="img" aria-label="Generating 4-order candidates exceeds 100 seconds from 35 minutes of slack; 1 to 3 order candidates stay under 7 seconds."></svg></div>
+  </section>
+</div>
+
+<div class="two">
+  <section>
+    <div class="chart-head"><div>
+      <h2>Same pattern in other data, different size</h2>
+      <p class="sub">Saving at max 3 vs no bundling, four instances.</p></div>
+      <div class="legend"><span><i style="background:var(--dense)"></i>dense (~7×9 km)</span><span><i style="background:var(--sparse)"></i>spread out (~16×24 km)</span></div>
+    </div>
+    <div class="plot"><svg id="c6" viewBox="0 0 440 300" role="img" aria-label="Dense instances save about 10 points more than spread-out ones at every slack."></svg></div>
+  </section>
+  <section>
+    <h2>Does it depend on rider fixed cost?</h2>
+    <p class="sub">30-min slack. Fixed cost per rider: bike / walk / car (won). Saving vs no bundling.</p>
+    <div class="tbl"><table class="cmp">
+      <thead><tr><th>Case</th><th>Fixed cost</th><th>max 2</th><th>max 3</th><th>max 4</th><th>Riders<br>(max 3)</th></tr></thead>
+      <tbody id="fc"></tbody>
+      <caption>The saving survives every cost setting. It is smallest when walking, the slowest mode, is cheapest: large bundles are hard to form on foot.</caption>
+    </table></div>
+  </section>
+</div>
+
+<section>
+  <h2>What we found</h2>
+  <ol class="find">
+    <li><div><h3>Bundling cuts operating cost by more than half</h3>
+      <p id="f1"></p></div></li>
+    <li><div><h3>Most of the saving comes from pairing two orders</h3>
+      <p>Allowing 2-order bundles alone cuts cost by 37–42% at every slack and halves the riders to about 50. That first step is
+        76–84% of the max-3 saving. Choosing transport modes without bundling saves only 0–0.2%.</p></div></li>
+    <li><div><h3>The fourth order only pays when the promise is generous</h3>
+      <p>Going from 3 to 4 orders adds 0.1% at 15 minutes of slack, 8.5% at 30 and 14.2% at 45. With a tight promise almost
+        no 4-order route meets every deadline.</p></div></li>
+    <li><div><h3>The promise, not the bundle size, sets customer waiting time</h3>
+      <p>At a 30-minute slack, raising the cap from 2 to 4 adds 1.6 minutes for the slowest 10% of customers. At max 4, raising
+        the slack from 15 to 45 minutes adds 21.5. No order is late, but the model uses almost all of the slack it is given:
+        in bundled plans the closest call arrives 0–0.8 minutes before its deadline.</p></div></li>
+    <li><div><h3>Density sets the size of the effect; max 3 is also the computational limit</h3>
+      <p>Dense instances save about 10 points more than spread-out ones (53% vs 43% at max 3, 30 min). 1–3-order bundles solve
+        within 32 seconds in every case. 4-order candidates explode (4 → 165,156) and exceed the 100-second limit from 35
+        minutes of slack.</p></div></li>
+  </ol>
+</section>
+
+<section>
+  <h2>What we would recommend</h2>
+  <ul class="plain">
+    <li><span><b>Manage the delivery promise as the main lever.</b> It drives both cost and waiting time; the bundle cap matters less.</span></li>
+    <li><span><b>Allow 2-order bundles everywhere.</b> They deliver most of the saving with little extra waiting.</span></li>
+    <li><span><b>Allow 3-order bundles where orders are dense and the promise is at least 25–30 minutes.</b> This matches the current cap of 3.</span></li>
+    <li><span><b>Avoid 4-order bundles.</b> The gain is small unless the promise is long, computation time explodes, and in spread-out areas the fourth order adds under 5%.</span></li>
+    <li><span><b>Expect the fee gap to be smaller than the cost gap.</b> Real total fees differ by about 15–28%, against a 53% modeled cost gap. Operating-cost savings are not fully passed on in fees; this experiment cannot say why.</span></li>
+  </ul>
+</section>
+
+<section>
+  <h2>What this does not show</h2>
+  <ul class="plain">
+    <li><span><b>A cost-only model.</b> Mode speed decides only whether a deadline can be met; arriving sooner is not rewarded. The model even uses slow walkers to save 0.2% (slowest-10% wait 38.7 → 50.5 min at max 1). Real dispatch weighs speed too.</span></li>
+    <li><span><b>Optimal within the candidates.</b> Results are optimal among the bundles the course algorithm generates (up to 4 orders), not among all possible plans.</span></li>
+    <li><span><b>Frozen demand.</b> A different promise or fee would change how many orders arrive; this is not modeled.</span></li>
+    <li><span><b>Little data.</b> Four synthetic instances, two per area type. Area size and trip length grow together, so we cannot separate them, and no instance uses real coordinates of a specific district.</span></li>
+    <li><span><b>Model cost ≠ fee.</b> Rider commissions, platform fees and promotions are outside the model.</span></li>
+  </ul>
+</section>
+
+<section>
+  <h2>All main scenarios</h2>
+  <p class="sub">STAGE1_2, original fixed costs. Won; minutes. Saving vs no bundling at the same slack.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>Slack</th><th>Scenario</th><th>Cost/order</th><th>Saving</th><th>Riders</th><th>Walk/Bike/Car</th><th>Fixed</th><th>Distance</th><th>Extra delay</th><th>Slowest 10%</th><th>Min margin</th><th>Late</th></tr></thead>
+    <tbody id="tb"></tbody>
+    <caption>Highlighted: headline scenario. Extra delay = arrival − (ready time + direct car time), mean over 100 orders. Min margin = smallest (deadline − arrival).</caption>
+  </table></div>
+</section>
+
+<footer>
+  <strong>Method.</strong> The course algorithm generates every feasible bundle of 1–4 orders (capacity, all-pickups-first route,
+  every deadline) for each rider type, then Gurobi selects the cheapest exact cover of the 100 orders under rider availability
+  (20 bikes, 30 walkers, 100 cars). Travel time = round(distance ÷ speed) + service time. Cost = fixed cost per rider + distance ÷ 100 × variable cost.
+  We left the original code untouched and added logging and a bundle-size filter to a copy; candidates are generated once per
+  slack with enough time to finish, then Gurobi is re-run for each cap. Every solution is checked with the course's solution_check.
+  The all-car baseline sets bike and walk availability to zero with max 1.
+  <div class="src">Sources —
+    <a href="https://www.inews24.com/view/1583441" target="_blank" rel="noopener">아이뉴스24, 배민 알뜰배달 vs 한집배달 (2023.4)</a> ·
+    <a href="https://www.inews24.com/view/1612741" target="_blank" rel="noopener">아이뉴스24, 알뜰배달 평균 배달비 1,820원 (2023.7)</a> ·
+    <a href="https://economist.co.kr/article/view/ecn202306150042" target="_blank" rel="noopener">이코노미스트, 알뜰배달 최대 3건 (2023.6)</a> ·
+    <a href="https://v.daum.net/v/20230719185125862" target="_blank" rel="noopener">헤럴드경제, 알뜰배달 배달 지연·점주 부담 배달비 (2023.7)</a> ·
+    <a href="https://www.metroseoul.co.kr/article/20230320500117" target="_blank" rel="noopener">메트로신문, 알뜰배달 점주 부담 배달비 2,500~3,300원 (2023.3)</a>
+    <br>Code &amp; data: bundle_delivery_experiment.ipynb · final_results.zip
+  </div>
+</footer>
+</div>
 <div class="tip" id="tip" role="status" aria-live="polite"></div>
 
 <script>
-const D = {"main": [{"s": 900, "k": 1, "car": true, "c": 7244.27, "tot": 724427.0, "b": 100, "dist": 124427, "fx": 600000.0, "vr": 124427.0, "mean": 23.2, "p90": 32.9, "slow": 38.7, "bs": 0.0, "w": 0, "bk": 0, "cr": 100, "sb": 0.0, "sn": 0.0}, {"s": 900, "k": 1, "car": false, "c": 7244.27, "tot": 724427.0, "b": 100, "dist": 124427, "fx": 600000.0, "vr": 124427.0, "mean": 23.2, "p90": 32.9, "slow": 38.7, "bs": 0.0, "w": 0, "bk": 0, "cr": 100, "sb": 0.0, "sn": 0.0}, {"s": 900, "k": 2, "car": false, "c": 4545.52, "tot": 454552.0, "b": 52, "dist": 143105, "fx": 326000.0, "vr": 128552.0, "mean": 30.7, "p90": 42.3, "slow": 46.9, "bs": 0.96, "w": 0, "bk": 7, "cr": 45, "sb": 37.3, "sn": 37.3}, {"s": 900, "k": 3, "car": false, "c": 4022.36, "tot": 402236.0, "b": 41, "dist": 158964, "fx": 286000.0, "vr": 116236.0, "mean": 32.6, "p90": 43.1, "slow": 47.8, "bs": 0.96, "w": 0, "bk": 20, "cr": 21, "sb": 44.5, "sn": 44.5}, {"s": 900, "k": 4, "car": false, "c": 4019.47, "tot": 401947.0, "b": 41, "dist": 156471, "fx": 286000.0, "vr": 115947.0, "mean": 31.9, "p90": 42.1, "slow": 47.5, "bs": 0.96, "w": 0, "bk": 20, "cr": 21, "sb": 44.5, "sn": 44.5}, {"s": 1200, "k": 1, "car": true, "c": 7244.27, "tot": 724427.0, "b": 100, "dist": 124427, "fx": 600000.0, "vr": 124427.0, "mean": 23.2, "p90": 32.9, "slow": 38.7, "bs": 0.0, "w": 0, "bk": 0, "cr": 100, "sb": 0.0, "sn": 0.0}, {"s": 1200, "k": 1, "car": false, "c": 7244.27, "tot": 724427.0, "b": 100, "dist": 124427, "fx": 600000.0, "vr": 124427.0, "mean": 23.2, "p90": 32.9, "slow": 38.7, "bs": 0.0, "w": 0, "bk": 0, "cr": 100, "sb": 0.0, "sn": 0.0}, {"s": 1200, "k": 2, "car": false, "c": 4421.49, "tot": 442149.0, "b": 51, "dist": 136035, "fx": 316000.0, "vr": 126149.0, "mean": 31.7, "p90": 44.3, "slow": 47.6, "bs": 0.98, "w": 0, "bk": 5, "cr": 46, "sb": 39.0, "sn": 39.0}, {"s": 1200, "k": 3, "car": false, "c": 3673.42, "tot": 367342.0, "b": 36, "dist": 155475, "fx": 254000.0, "vr": 113342.0, "mean": 35.3, "p90": 47.4, "slow": 51.9, "bs": 0.99, "w": 0, "bk": 19, "cr": 17, "sb": 49.3, "sn": 49.3}, {"s": 1200, "k": 4, "car": false, "c": 3518.34, "tot": 351834.0, "b": 33, "dist": 162672, "fx": 238000.0, "vr": 113834.0, "mean": 36.4, "p90": 48.1, "slow": 52.1, "bs": 0.98, "w": 0, "bk": 20, "cr": 13, "sb": 51.4, "sn": 51.4}, {"s": 1500, "k": 1, "car": true, "c": 7244.27, "tot": 724427.0, "b": 100, "dist": 124427, "fx": 600000.0, "vr": 124427.0, "mean": 23.2, "p90": 32.9, "slow": 38.7, "bs": 0.0, "w": 0, "bk": 0, "cr": 100, "sb": 0.0, "sn": -0.0}, {"s": 1500, "k": 1, "car": false, "c": 7242.54, "tot": 724254.0, "b": 100, "dist": 124427, "fx": 604000.0, "vr": 120254.0, "mean": 23.7, "p90": 33.0, "slow": 42.9, "bs": 0.0, "w": 2, "bk": 0, "cr": 98, "sb": 0.0, "sn": 0.0}, {"s": 1500, "k": 2, "car": false, "c": 4348.2, "tot": 434820.0, "b": 50, "dist": 133180, "fx": 312000.0, "vr": 122820.0, "mean": 33.8, "p90": 46.2, "slow": 49.4, "bs": 1.0, "w": 1, "bk": 5, "cr": 44, "sb": 40.0, "sn": 40.0}, {"s": 1500, "k": 3, "car": false, "c": 3496.76, "tot": 349676.0, "b": 35, "dist": 146399, "fx": 230000.0, "vr": 119676.0, "mean": 37.9, "p90": 49.5, "slow": 52.5, "bs": 1.0, "w": 0, "bk": 10, "cr": 25, "sb": 51.7, "sn": 51.7}, {"s": 1500, "k": 4, "car": false, "c": 3260.42, "tot": 326042.0, "b": 29, "dist": 164738, "fx": 210000.0, "vr": 116042.0, "mean": 40.6, "p90": 51.0, "slow": 56.7, "bs": 1.0, "w": 0, "bk": 18, "cr": 11, "sb": 55.0, "sn": 55.0}, {"s": 1800, "k": 1, "car": true, "c": 7244.27, "tot": 724427.0, "b": 100, "dist": 124427, "fx": 600000.0, "vr": 124427.0, "mean": 23.2, "p90": 32.9, "slow": 38.7, "bs": 0.0, "w": 0, "bk": 0, "cr": 100, "sb": 0.0, "sn": -0.1}, {"s": 1800, "k": 1, "car": false, "c": 7233.44, "tot": 723344.0, "b": 100, "dist": 124427, "fx": 610000.0, "vr": 113344.0, "mean": 24.6, "p90": 35.3, "slow": 50.5, "bs": 0.0, "w": 5, "bk": 0, "cr": 95, "sb": 0.1, "sn": 0.0}, {"s": 1800, "k": 2, "car": false, "c": 4302.03, "tot": 430203.0, "b": 50, "dist": 132620, "fx": 312000.0, "vr": 118203.0, "mean": 35.1, "p90": 48.4, "slow": 57.0, "bs": 1.0, "w": 3, "bk": 3, "cr": 44, "sb": 40.6, "sn": 40.5}, {"s": 1800, "k": 3, "car": false, "c": 3387.07, "tot": 338707.0, "b": 34, "dist": 140553, "fx": 226000.0, "vr": 112707.0, "mean": 39.3, "p90": 51.8, "slow": 57.9, "bs": 1.0, "w": 0, "bk": 11, "cr": 23, "sb": 53.2, "sn": 53.2}, {"s": 1800, "k": 4, "car": false, "c": 3099.09, "tot": 309909.0, "b": 27, "dist": 160065, "fx": 202000.0, "vr": 107909.0, "mean": 42.6, "p90": 55.0, "slow": 58.6, "bs": 1.0, "w": 0, "bk": 20, "cr": 7, "sb": 57.2, "sn": 57.2}, {"s": 2100, "k": 1, "car": true, "c": 7244.27, "tot": 724427.0, "b": 100, "dist": 124427, "fx": 600000.0, "vr": 124427.0, "mean": 23.2, "p90": 32.9, "slow": 38.7, "bs": 0.0, "w": 0, "bk": 0, "cr": 100, "sb": 0.0, "sn": -0.2}, {"s": 2100, "k": 1, "car": false, "c": 7227.85, "tot": 722785.0, "b": 100, "dist": 124427, "fx": 612000.0, "vr": 110785.0, "mean": 24.9, "p90": 35.3, "slow": 53.6, "bs": 0.0, "w": 6, "bk": 0, "cr": 94, "sb": 0.2, "sn": 0.0}, {"s": 2100, "k": 2, "car": false, "c": 4267.39, "tot": 426739.0, "b": 50, "dist": 130348, "fx": 316000.0, "vr": 110739.0, "mean": 37.1, "p90": 53.9, "slow": 63.3, "bs": 1.0, "w": 6, "bk": 2, "cr": 42, "sb": 41.1, "sn": 41.0}, {"s": 2100, "k": 3, "car": false, "c": 3358.14, "tot": 335814.0, "b": 34, "dist": 137991, "fx": 224000.0, "vr": 111814.0, "mean": 41.6, "p90": 55.5, "slow": 59.5, "bs": 1.0, "w": 1, "bk": 9, "cr": 24, "sb": 53.6, "sn": 53.5}, {"s": 2100, "k": 4, "car": false, "c": 2961.48, "tot": 296148.0, "b": 26, "dist": 150673, "fx": 176000.0, "vr": 120148.0, "mean": 44.8, "p90": 59.4, "slow": 62.0, "bs": 1.0, "w": 0, "bk": 10, "cr": 16, "sb": 59.1, "sn": 59.0}, {"s": 2400, "k": 1, "car": true, "c": 7244.27, "tot": 724427.0, "b": 100, "dist": 124427, "fx": 600000.0, "vr": 124427.0, "mean": 23.2, "p90": 32.9, "slow": 38.7, "bs": 0.0, "w": 0, "bk": 0, "cr": 100, "sb": 0.0, "sn": -0.2}, {"s": 2400, "k": 1, "car": false, "c": 7227.85, "tot": 722785.0, "b": 100, "dist": 124427, "fx": 612000.0, "vr": 110785.0, "mean": 24.9, "p90": 35.3, "slow": 53.6, "bs": 0.0, "w": 6, "bk": 0, "cr": 94, "sb": 0.2, "sn": 0.0}, {"s": 2400, "k": 2, "car": false, "c": 4243.8, "tot": 424380.0, "b": 50, "dist": 132982, "fx": 332000.0, "vr": 92380.0, "mean": 40.6, "p90": 61.6, "slow": 68.4, "bs": 1.0, "w": 13, "bk": 3, "cr": 34, "sb": 41.4, "sn": 41.3}, {"s": 2400, "k": 3, "car": false, "c": 3296.53, "tot": 329653.0, "b": 34, "dist": 132814, "fx": 226000.0, "vr": 103653.0, "mean": 43.5, "p90": 59.7, "slow": 66.2, "bs": 1.0, "w": 3, "bk": 8, "cr": 23, "sb": 54.5, "sn": 54.4}, {"s": 2400, "k": 4, "car": false, "c": 2869.67, "tot": 286967.0, "b": 25, "dist": 147585, "fx": 168000.0, "vr": 118967.0, "mean": 49.1, "p90": 63.9, "slow": 66.9, "bs": 1.0, "w": 0, "bk": 9, "cr": 16, "sb": 60.4, "sn": 60.3}, {"s": 2700, "k": 1, "car": true, "c": 7244.27, "tot": 724427.0, "b": 100, "dist": 124427, "fx": 600000.0, "vr": 124427.0, "mean": 23.2, "p90": 32.9, "slow": 38.7, "bs": 0.0, "w": 0, "bk": 0, "cr": 100, "sb": 0.0, "sn": -0.2}, {"s": 2700, "k": 1, "car": false, "c": 7227.85, "tot": 722785.0, "b": 100, "dist": 124427, "fx": 612000.0, "vr": 110785.0, "mean": 24.9, "p90": 35.3, "slow": 53.6, "bs": 0.0, "w": 6, "bk": 0, "cr": 94, "sb": 0.2, "sn": 0.0}, {"s": 2700, "k": 2, "car": false, "c": 4215.92, "tot": 421592.0, "b": 50, "dist": 129564, "fx": 330000.0, "vr": 91592.0, "mean": 42.2, "p90": 67.7, "slow": 72.2, "bs": 1.0, "w": 13, "bk": 2, "cr": 35, "sb": 41.8, "sn": 41.7}, {"s": 2700, "k": 3, "car": false, "c": 3272.6, "tot": 327260.0, "b": 34, "dist": 130112, "fx": 224000.0, "vr": 103260.0, "mean": 44.2, "p90": 60.8, "slow": 66.7, "bs": 0.99, "w": 3, "bk": 7, "cr": 24, "sb": 54.8, "sn": 54.7}, {"s": 2700, "k": 4, "car": false, "c": 2809.15, "tot": 280915.0, "b": 25, "dist": 138372, "fx": 172000.0, "vr": 108915.0, "mean": 49.9, "p90": 64.5, "slow": 69.0, "bs": 1.0, "w": 0, "bk": 11, "cr": 14, "sb": 61.2, "sn": 61.1}], "fc": [{"lab": "A 원본 8000/8000/6000", "col": "차 단독", "c": 7244.27, "b": 100, "sn": -0.1, "sb": 0.0, "w": 0, "bk": 0, "cr": 100, "slow": 38.7}, {"lab": "A 원본 8000/8000/6000", "col": "최대 1건", "c": 7233.44, "b": 100, "sn": 0.0, "sb": 0.1, "w": 5, "bk": 0, "cr": 95, "slow": 50.5}, {"lab": "A 원본 8000/8000/6000", "col": "최대 2건", "c": 4302.03, "b": 50, "sn": 40.5, "sb": 40.6, "w": 3, "bk": 3, "cr": 44, "slow": 57.0}, {"lab": "A 원본 8000/8000/6000", "col": "최대 3건", "c": 3387.07, "b": 34, "sn": 53.2, "sb": 53.2, "w": 0, "bk": 11, "cr": 23, "slow": 57.9}, {"lab": "A 원본 8000/8000/6000", "col": "최대 4건", "c": 3099.09, "b": 27, "sn": 57.2, "sb": 57.2, "w": 0, "bk": 20, "cr": 7, "slow": 58.6}, {"lab": "B 균일 6000", "col": "차 단독", "c": 7244.27, "b": 100, "sn": -8.5, "sb": 0.0, "w": 0, "bk": 0, "cr": 100, "slow": 38.7}, {"lab": "B 균일 6000", "col": "최대 1건", "c": 6678.89, "b": 100, "sn": 0.0, "sb": 7.8, "w": 30, "bk": 20, "cr": 50, "slow": 57.1}, {"lab": "B 균일 6000", "col": "최대 2건", "c": 3610.12, "b": 50, "sn": 45.9, "sb": 50.2, "w": 30, "bk": 20, "cr": 0, "slow": 61.8}, {"lab": "B 균일 6000", "col": "최대 3건", "c": 2977.18, "b": 34, "sn": 55.4, "sb": 58.9, "w": 5, "bk": 20, "cr": 9, "slow": 58.6}, {"lab": "B 균일 6000", "col": "최대 4건", "c": 2680.05, "b": 28, "sn": 59.9, "sb": 63.0, "w": 3, "bk": 20, "cr": 5, "slow": 58.7}, {"lab": "C 균일 5000", "col": "차 단독", "c": 6244.27, "b": 100, "sn": -10.0, "sb": 0.0, "w": 0, "bk": 0, "cr": 100, "slow": 38.7}, {"lab": "C 균일 5000", "col": "최대 1건", "c": 5678.89, "b": 100, "sn": 0.0, "sb": 9.1, "w": 30, "bk": 20, "cr": 50, "slow": 57.1}, {"lab": "C 균일 5000", "col": "최대 2건", "c": 3110.12, "b": 50, "sn": 45.2, "sb": 50.2, "w": 30, "bk": 20, "cr": 0, "slow": 61.8}, {"lab": "C 균일 5000", "col": "최대 3건", "c": 2634.79, "b": 35, "sn": 53.6, "sb": 57.8, "w": 8, "bk": 20, "cr": 7, "slow": 58.8}, {"lab": "C 균일 5000", "col": "최대 4건", "c": 2400.05, "b": 28, "sn": 57.7, "sb": 61.6, "w": 3, "bk": 20, "cr": 5, "slow": 58.7}, {"lab": "D 혼합 9000/4000/5000", "col": "차 단독", "c": 6244.27, "b": 100, "sn": -13.9, "sb": 0.0, "w": 0, "bk": 0, "cr": 100, "slow": 38.7}, {"lab": "D 혼합 9000/4000/5000", "col": "최대 1건", "c": 5482.59, "b": 100, "sn": 0.0, "sb": 12.2, "w": 30, "bk": 0, "cr": 70, "slow": 57.1}, {"lab": "D 혼합 9000/4000/5000", "col": "최대 2건", "c": 3087.2, "b": 51, "sn": 43.7, "sb": 50.6, "w": 30, "bk": 0, "cr": 21, "slow": 60.1}, {"lab": "D 혼합 9000/4000/5000", "col": "최대 3건", "c": 2786.92, "b": 45, "sn": 49.2, "sb": 55.4, "w": 30, "bk": 0, "cr": 15, "slow": 60.9}, {"lab": "D 혼합 9000/4000/5000", "col": "최대 4건", "c": 2725.2, "b": 44, "sn": 50.3, "sb": 56.4, "w": 30, "bk": 0, "cr": 14, "slow": 60.9}], "rb": [{"file": "STAGE1_2", "s": 900, "k": 1, "car": true, "c": 7244.27, "sn": 0.0, "b": 100, "slow": 38.7}, {"file": "STAGE1_2", "s": 900, "k": 1, "car": false, "c": 7244.27, "sn": 0.0, "b": 100, "slow": 38.7}, {"file": "STAGE1_2", "s": 900, "k": 2, "car": false, "c": 4545.52, "sn": 37.3, "b": 52, "slow": 46.9}, {"file": "STAGE1_2", "s": 900, "k": 3, "car": false, "c": 4022.36, "sn": 44.5, "b": 41, "slow": 47.8}, {"file": "STAGE1_2", "s": 900, "k": 4, "car": false, "c": 4019.47, "sn": 44.5, "b": 41, "slow": 47.5}, {"file": "STAGE1_2", "s": 1200, "k": 1, "car": true, "c": 7244.27, "sn": 0.0, "b": 100, "slow": 38.7}, {"file": "STAGE1_2", "s": 1200, "k": 1, "car": false, "c": 7244.27, "sn": 0.0, "b": 100, "slow": 38.7}, {"file": "STAGE1_2", "s": 1200, "k": 2, "car": false, "c": 4421.49, "sn": 39.0, "b": 51, "slow": 47.6}, {"file": "STAGE1_2", "s": 1200, "k": 3, "car": false, "c": 3673.42, "sn": 49.3, "b": 36, "slow": 51.9}, {"file": "STAGE1_2", "s": 1200, "k": 4, "car": false, "c": 3518.34, "sn": 51.4, "b": 33, "slow": 52.1}, {"file": "STAGE1_2", "s": 1500, "k": 1, "car": true, "c": 7244.27, "sn": -0.0, "b": 100, "slow": 38.7}, {"file": "STAGE1_2", "s": 1500, "k": 1, "car": false, "c": 7242.54, "sn": 0.0, "b": 100, "slow": 42.9}, {"file": "STAGE1_2", "s": 1500, "k": 2, "car": false, "c": 4348.2, "sn": 40.0, "b": 50, "slow": 49.4}, {"file": "STAGE1_2", "s": 1500, "k": 3, "car": false, "c": 3496.76, "sn": 51.7, "b": 35, "slow": 52.5}, {"file": "STAGE1_2", "s": 1500, "k": 4, "car": false, "c": 3260.42, "sn": 55.0, "b": 29, "slow": 56.7}, {"file": "STAGE1_2", "s": 1800, "k": 1, "car": true, "c": 7244.27, "sn": -0.1, "b": 100, "slow": 38.7}, {"file": "STAGE1_2", "s": 1800, "k": 1, "car": false, "c": 7233.44, "sn": 0.0, "b": 100, "slow": 50.5}, {"file": "STAGE1_2", "s": 1800, "k": 2, "car": false, "c": 4302.03, "sn": 40.5, "b": 50, "slow": 57.0}, {"file": "STAGE1_2", "s": 1800, "k": 3, "car": false, "c": 3387.07, "sn": 53.2, "b": 34, "slow": 57.9}, {"file": "STAGE1_2", "s": 1800, "k": 4, "car": false, "c": 3099.09, "sn": 57.2, "b": 27, "slow": 58.6}, {"file": "STAGE1_2", "s": 2100, "k": 1, "car": true, "c": 7244.27, "sn": -0.2, "b": 100, "slow": 38.7}, {"file": "STAGE1_2", "s": 2100, "k": 1, "car": false, "c": 7227.85, "sn": 0.0, "b": 100, "slow": 53.6}, {"file": "STAGE1_2", "s": 2100, "k": 2, "car": false, "c": 4267.39, "sn": 41.0, "b": 50, "slow": 63.3}, {"file": "STAGE1_2", "s": 2100, "k": 3, "car": false, "c": 3358.14, "sn": 53.5, "b": 34, "slow": 59.5}, {"file": "STAGE1_2", "s": 2100, "k": 4, "car": false, "c": 2961.48, "sn": 59.0, "b": 26, "slow": 62.0}, {"file": "STAGE1_1", "s": 900, "k": 1, "car": true, "c": 7322.13, "sn": 0.0, "b": 100, "slow": 34.8}, {"file": "STAGE1_1", "s": 900, "k": 1, "car": false, "c": 7322.13, "sn": 0.0, "b": 100, "slow": 34.8}, {"file": "STAGE1_1", "s": 900, "k": 2, "car": false, "c": 4531.21, "sn": 38.1, "b": 51, "slow": 44.1}, {"file": "STAGE1_1", "s": 900, "k": 3, "car": false, "c": 3954.45, "sn": 46.0, "b": 41, "slow": 45.8}, {"file": "STAGE1_1", "s": 900, "k": 4, "car": false, "c": 3888.21, "sn": 46.9, "b": 40, "slow": 46.2}, {"file": "STAGE1_1", "s": 1200, "k": 1, "car": true, "c": 7322.13, "sn": 0.0, "b": 100, "slow": 34.8}, {"file": "STAGE1_1", "s": 1200, "k": 1, "car": false, "c": 7322.13, "sn": 0.0, "b": 100, "slow": 34.8}, {"file": "STAGE1_1", "s": 1200, "k": 2, "car": false, "c": 4434.83, "sn": 39.4, "b": 50, "slow": 45.7}, {"file": "STAGE1_1", "s": 1200, "k": 3, "car": false, "c": 3642.29, "sn": 50.3, "b": 35, "slow": 48.9}, {"file": "STAGE1_1", "s": 1200, "k": 4, "car": false, "c": 3501.58, "sn": 52.2, "b": 33, "slow": 50.5}, {"file": "STAGE1_1", "s": 1500, "k": 1, "car": true, "c": 7322.13, "sn": -0.0, "b": 100, "slow": 34.8}, {"file": "STAGE1_1", "s": 1500, "k": 1, "car": false, "c": 7321.08, "sn": 0.0, "b": 100, "slow": 38.7}, {"file": "STAGE1_1", "s": 1500, "k": 2, "car": false, "c": 4371.91, "sn": 40.3, "b": 51, "slow": 50.0}, {"file": "STAGE1_1", "s": 1500, "k": 3, "car": false, "c": 3518.24, "sn": 51.9, "b": 34, "slow": 52.7}, {"file": "STAGE1_1", "s": 1500, "k": 4, "car": false, "c": 3154.4, "sn": 56.9, "b": 28, "slow": 54.8}, {"file": "STAGE1_1", "s": 1800, "k": 1, "car": true, "c": 7322.13, "sn": -0.1, "b": 100, "slow": 34.8}, {"file": "STAGE1_1", "s": 1800, "k": 1, "car": false, "c": 7314.65, "sn": 0.0, "b": 100, "slow": 48.1}, {"file": "STAGE1_1", "s": 1800, "k": 2, "car": false, "c": 4291.64, "sn": 41.3, "b": 50, "slow": 56.5}, {"file": "STAGE1_1", "s": 1800, "k": 3, "car": false, "c": 3414.1, "sn": 53.3, "b": 34, "slow": 56.7}, {"file": "STAGE1_1", "s": 1800, "k": 4, "car": false, "c": 3039.12, "sn": 58.5, "b": 26, "slow": 57.6}, {"file": "STAGE1_1", "s": 2100, "k": 1, "car": true, "c": 7322.13, "sn": -0.1, "b": 100, "slow": 34.8}, {"file": "STAGE1_1", "s": 2100, "k": 1, "car": false, "c": 7314.65, "sn": 0.0, "b": 100, "slow": 48.1}, {"file": "STAGE1_1", "s": 2100, "k": 2, "car": false, "c": 4265.51, "sn": 41.7, "b": 50, "slow": 60.9}, {"file": "STAGE1_1", "s": 2100, "k": 3, "car": false, "c": 3335.04, "sn": 54.4, "b": 34, "slow": 59.7}, {"file": "STAGE1_1", "s": 2100, "k": 4, "car": false, "c": 2918.62, "sn": 60.1, "b": 26, "slow": 60.9}, {"file": "STAGE1_13", "s": 900, "k": 1, "car": true, "c": 7650.55, "sn": 0.0, "b": 100, "slow": 47.0}, {"file": "STAGE1_13", "s": 900, "k": 1, "car": false, "c": 7650.55, "sn": 0.0, "b": 100, "slow": 47.0}, {"file": "STAGE1_13", "s": 900, "k": 2, "car": false, "c": 5568.31, "sn": 27.2, "b": 61, "slow": 53.4}, {"file": "STAGE1_13", "s": 900, "k": 3, "car": false, "c": 5300.47, "sn": 30.7, "b": 56, "slow": 54.3}, {"file": "STAGE1_13", "s": 900, "k": 4, "car": false, "c": 5300.47, "sn": 30.7, "b": 56, "slow": 54.3}, {"file": "STAGE1_13", "s": 1200, "k": 1, "car": true, "c": 7650.55, "sn": 0.0, "b": 100, "slow": 47.0}, {"file": "STAGE1_13", "s": 1200, "k": 1, "car": false, "c": 7650.55, "sn": 0.0, "b": 100, "slow": 47.0}, {"file": "STAGE1_13", "s": 1200, "k": 2, "car": false, "c": 5310.76, "sn": 30.6, "b": 58, "slow": 55.2}, {"file": "STAGE1_13", "s": 1200, "k": 3, "car": false, "c": 4874.9, "sn": 36.3, "b": 50, "slow": 58.1}, {"file": "STAGE1_13", "s": 1200, "k": 4, "car": false, "c": 4818.03, "sn": 37.0, "b": 50, "slow": 58.5}, {"file": "STAGE1_13", "s": 1500, "k": 1, "car": true, "c": 7650.55, "sn": -0.0, "b": 100, "slow": 47.0}, {"file": "STAGE1_13", "s": 1500, "k": 1, "car": false, "c": 7649.9, "sn": 0.0, "b": 100, "slow": 49.5}, {"file": "STAGE1_13", "s": 1500, "k": 2, "car": false, "c": 5191.98, "sn": 32.1, "b": 55, "slow": 63.5}, {"file": "STAGE1_13", "s": 1500, "k": 3, "car": false, "c": 4569.8, "sn": 40.3, "b": 45, "slow": 64.8}, {"file": "STAGE1_13", "s": 1500, "k": 4, "car": false, "c": 4489.66, "sn": 41.3, "b": 43, "slow": 65.9}, {"file": "STAGE1_13", "s": 1800, "k": 1, "car": true, "c": 7650.55, "sn": -0.2, "b": 100, "slow": 47.0}, {"file": "STAGE1_13", "s": 1800, "k": 1, "car": false, "c": 7634.64, "sn": 0.0, "b": 100, "slow": 58.8}, {"file": "STAGE1_13", "s": 1800, "k": 2, "car": false, "c": 4998.23, "sn": 34.5, "b": 53, "slow": 65.3}, {"file": "STAGE1_13", "s": 1800, "k": 3, "car": false, "c": 4314.84, "sn": 43.5, "b": 40, "slow": 67.7}, {"file": "STAGE1_13", "s": 1800, "k": 4, "car": false, "c": 4174.65, "sn": 45.3, "b": 39, "slow": 71.0}, {"file": "STAGE1_13", "s": 2100, "k": 1, "car": true, "c": 7650.55, "sn": -0.3, "b": 100, "slow": 47.0}, {"file": "STAGE1_13", "s": 2100, "k": 1, "car": false, "c": 7628.39, "sn": 0.0, "b": 100, "slow": 60.9}, {"file": "STAGE1_13", "s": 2100, "k": 2, "car": false, "c": 4927.59, "sn": 35.4, "b": 53, "slow": 69.1}, {"file": "STAGE1_13", "s": 2100, "k": 3, "car": false, "c": 4204.85, "sn": 44.9, "b": 39, "slow": 69.5}, {"file": "STAGE1_13", "s": 2100, "k": 4, "car": false, "c": 4018.1, "sn": 47.3, "b": 35, "slow": 70.0}, {"file": "STAGE1_14", "s": 900, "k": 1, "car": true, "c": 7983.7, "sn": -0.0, "b": 100, "slow": 46.1}, {"file": "STAGE1_14", "s": 900, "k": 1, "car": false, "c": 7980.59, "sn": 0.0, "b": 100, "slow": 45.2}, {"file": "STAGE1_14", "s": 900, "k": 2, "car": false, "c": 5609.29, "sn": 29.7, "b": 57, "slow": 55.2}, {"file": "STAGE1_14", "s": 900, "k": 3, "car": false, "c": 5438.53, "sn": 31.9, "b": 56, "slow": 56.1}, {"file": "STAGE1_14", "s": 900, "k": 4, "car": false, "c": 5438.53, "sn": 31.9, "b": 56, "slow": 56.1}, {"file": "STAGE1_14", "s": 1200, "k": 1, "car": true, "c": 7983.7, "sn": -0.0, "b": 100, "slow": 46.1}, {"file": "STAGE1_14", "s": 1200, "k": 1, "car": false, "c": 7980.59, "sn": 0.0, "b": 100, "slow": 45.2}, {"file": "STAGE1_14", "s": 1200, "k": 2, "car": false, "c": 5413.0, "sn": 32.2, "b": 54, "slow": 59.0}, {"file": "STAGE1_14", "s": 1200, "k": 3, "car": false, "c": 4920.77, "sn": 38.3, "b": 46, "slow": 58.3}, {"file": "STAGE1_14", "s": 1200, "k": 4, "car": false, "c": 4920.77, "sn": 38.3, "b": 46, "slow": 58.3}, {"file": "STAGE1_14", "s": 1500, "k": 1, "car": true, "c": 7983.7, "sn": -0.0, "b": 100, "slow": 46.1}, {"file": "STAGE1_14", "s": 1500, "k": 1, "car": false, "c": 7979.81, "sn": 0.0, "b": 100, "slow": 47.6}, {"file": "STAGE1_14", "s": 1500, "k": 2, "car": false, "c": 5316.97, "sn": 33.4, "b": 52, "slow": 58.8}, {"file": "STAGE1_14", "s": 1500, "k": 3, "car": false, "c": 4692.86, "sn": 41.2, "b": 43, "slow": 63.8}, {"file": "STAGE1_14", "s": 1500, "k": 4, "car": false, "c": 4654.83, "sn": 41.7, "b": 41, "slow": 63.3}, {"file": "STAGE1_14", "s": 1800, "k": 1, "car": true, "c": 7983.7, "sn": -0.3, "b": 100, "slow": 46.1}, {"file": "STAGE1_14", "s": 1800, "k": 1, "car": false, "c": 7955.91, "sn": 0.0, "b": 100, "slow": 59.5}, {"file": "STAGE1_14", "s": 1800, "k": 2, "car": false, "c": 5222.07, "sn": 34.4, "b": 52, "slow": 58.7}, {"file": "STAGE1_14", "s": 1800, "k": 3, "car": false, "c": 4502.4, "sn": 43.4, "b": 40, "slow": 64.7}, {"file": "STAGE1_14", "s": 1800, "k": 4, "car": false, "c": 4423.34, "sn": 44.4, "b": 38, "slow": 67.1}, {"file": "STAGE1_14", "s": 2100, "k": 1, "car": true, "c": 7983.7, "sn": -0.8, "b": 100, "slow": 46.1}, {"file": "STAGE1_14", "s": 2100, "k": 1, "car": false, "c": 7921.49, "sn": 0.0, "b": 100, "slow": 66.0}, {"file": "STAGE1_14", "s": 2100, "k": 2, "car": false, "c": 5153.57, "sn": 34.9, "b": 52, "slow": 65.2}, {"file": "STAGE1_14", "s": 2100, "k": 3, "car": false, "c": 4397.67, "sn": 44.5, "b": 38, "slow": 68.3}, {"file": "STAGE1_14", "s": 2100, "k": 4, "car": false, "c": 4239.38, "sn": 46.5, "b": 36, "slow": 70.5}], "files": [{"file": "STAGE1_2.json", "K": 100, "original_slack": 1800.0, "area_ns_km": 6.584609910000296, "area_ew_km": 8.60841032565392, "median_shop_to_customer": 1015.5, "fixed_costs": "8000/8000/6000"}, {"file": "STAGE1_1.json", "K": 100, "original_slack": 1200.0, "area_ns_km": 6.582112409999503, "area_ew_km": 8.719486607175547, "median_shop_to_customer": 1145.0, "fixed_costs": "8000/8000/6000"}, {"file": "STAGE1_13.json", "K": 100, "original_slack": 1200.0, "area_ns_km": 16.9770381900003, "area_ew_km": 24.6758085899724, "median_shop_to_customer": 1552.5, "fixed_costs": "8000/8000/6000"}, {"file": "STAGE1_14.json", "K": 100, "original_slack": 2400.0, "area_ns_km": 15.943917899999905, "area_ew_km": 23.49036194693611, "median_shop_to_customer": 1711.0, "fixed_costs": "8000/8000/6000"}], "gen": [{"slack": 900, "gen_time_sec": 1.6864347457885742, "n_candidates": 1388}, {"slack": 1200, "gen_time_sec": 5.815576076507568, "n_candidates": 3525}, {"slack": 1500, "gen_time_sec": 16.377373456954956, "n_candidates": 8573}, {"slack": 1800, "gen_time_sec": 58.43203139305115, "n_candidates": 20868}, {"slack": 2100, "gen_time_sec": 179.51612782478333, "n_candidates": 49568}, {"slack": 2400, "gen_time_sec": 461.4430015087128, "n_candidates": 111195}, {"slack": 2700, "gen_time_sec": 1038.4438326358795, "n_candidates": 234207}]};
-const NS = "http://www.w3.org/2000/svg";
-const SL = [900,1200,1500,1800,2100,2400,2700];
-const mins = s => s/60;
-const fmt = n => Math.round(n).toLocaleString('en-US');
-const el = (t,a={}) => {const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); return e;};
-const cssv = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-const txt = (g,x,y,s,cls,anchor='middle',fill) => {const t=el('text',{x,y,'text-anchor':anchor,class:cls}); if(fill) t.setAttribute('fill',fill); t.textContent=s; g.appendChild(t); return t;};
-const M = {}; D.main.forEach(r => M[`${r.s}|${r.k}|${r.car}`] = r);
-const get = (s,k,car=false) => M[`${s}|${k}|${car}`];
-const KC = {1:'--k1',2:'--k2',3:'--k3',4:'--k4'};
-
-const tip = document.getElementById('tip');
-function showTip(ev,html){tip.innerHTML=html;tip.style.opacity=1;const r=tip.getBoundingClientRect();
-  let x=ev.clientX+14,y=ev.clientY-r.height-12; if(x+r.width>innerWidth-10)x=ev.clientX-r.width-14; if(y<8)y=ev.clientY+16;
+const D={"main": [{"s": 900, "k": 1, "car": false, "c": 7244.27, "sv": 0.0, "svc": 0.0, "b": 100, "w": 0, "bk": 0, "cr": 100, "ow": 0, "ob": 0, "oc": 100, "fx": 600000.0, "vr": 124427.0, "slow": 38.7, "mean": 23.2, "ex": 0.0, "exmax": 0.0, "mg": 15.0, "late": 0, "bs": 0.0}, {"s": 900, "k": 2, "car": false, "c": 4545.52, "sv": 37.25, "svc": 37.25, "b": 52, "w": 0, "bk": 7, "cr": 45, "ow": 0, "ob": 14, "oc": 86, "fx": 326000.0, "vr": 128552.0, "slow": 46.9, "mean": 30.7, "ex": 7.4, "exmax": 14.8, "mg": 0.1, "late": 0, "bs": 96.0}, {"s": 900, "k": 3, "car": false, "c": 4022.36, "sv": 44.48, "svc": 44.48, "b": 41, "w": 0, "bk": 20, "cr": 21, "ow": 0, "ob": 58, "oc": 42, "fx": 286000.0, "vr": 116236.0, "slow": 47.8, "mean": 32.6, "ex": 9.3, "exmax": 14.9, "mg": 0.1, "late": 0, "bs": 96.0}, {"s": 900, "k": 4, "car": false, "c": 4019.47, "sv": 44.52, "svc": 44.52, "b": 41, "w": 0, "bk": 20, "cr": 21, "ow": 0, "ob": 59, "oc": 41, "fx": 286000.0, "vr": 115947.0, "slow": 47.5, "mean": 31.9, "ex": 8.7, "exmax": 14.9, "mg": 0.1, "late": 0, "bs": 96.0}, {"s": 900, "k": 1, "car": true, "c": 7244.27, "sv": 0.0, "svc": 0.0, "b": 100, "w": 0, "bk": 0, "cr": 100, "ow": 0, "ob": 0, "oc": 100, "fx": 600000.0, "vr": 124427.0, "slow": 38.7, "mean": 23.2, "ex": 0.0, "exmax": 0.0, "mg": 15.0, "late": 0, "bs": 0.0}, {"s": 1200, "k": 1, "car": false, "c": 7244.27, "sv": 0.0, "svc": 0.0, "b": 100, "w": 0, "bk": 0, "cr": 100, "ow": 0, "ob": 0, "oc": 100, "fx": 600000.0, "vr": 124427.0, "slow": 38.7, "mean": 23.2, "ex": 0.0, "exmax": 0.0, "mg": 20.0, "late": 0, "bs": 0.0}, {"s": 1200, "k": 2, "car": false, "c": 4421.49, "sv": 38.97, "svc": 38.97, "b": 51, "w": 0, "bk": 5, "cr": 46, "ow": 0, "ob": 10, "oc": 90, "fx": 316000.0, "vr": 126149.0, "slow": 47.6, "mean": 31.7, "ex": 8.5, "exmax": 19.6, "mg": 0.4, "late": 0, "bs": 98.0}, {"s": 1200, "k": 3, "car": false, "c": 3673.42, "sv": 49.29, "svc": 49.29, "b": 36, "w": 0, "bk": 19, "cr": 17, "ow": 0, "ob": 55, "oc": 45, "fx": 254000.0, "vr": 113342.0, "slow": 51.9, "mean": 35.3, "ex": 12.0, "exmax": 20.0, "mg": 0.0, "late": 0, "bs": 99.0}, {"s": 1200, "k": 4, "car": false, "c": 3518.34, "sv": 51.43, "svc": 51.43, "b": 33, "w": 0, "bk": 20, "cr": 13, "ow": 0, "ob": 67, "oc": 33, "fx": 238000.0, "vr": 113834.0, "slow": 52.1, "mean": 36.4, "ex": 13.1, "exmax": 20.0, "mg": 0.0, "late": 0, "bs": 98.0}, {"s": 1200, "k": 1, "car": true, "c": 7244.27, "sv": 0.0, "svc": 0.0, "b": 100, "w": 0, "bk": 0, "cr": 100, "ow": 0, "ob": 0, "oc": 100, "fx": 600000.0, "vr": 124427.0, "slow": 38.7, "mean": 23.2, "ex": 0.0, "exmax": 0.0, "mg": 20.0, "late": 0, "bs": 0.0}, {"s": 1500, "k": 1, "car": false, "c": 7242.54, "sv": 0.0, "svc": 0.02, "b": 100, "w": 2, "bk": 0, "cr": 98, "ow": 2, "ob": 0, "oc": 98, "fx": 604000.0, "vr": 120254.0, "slow": 42.9, "mean": 23.7, "ex": 0.5, "exmax": 24.9, "mg": 0.1, "late": 0, "bs": 0.0}, {"s": 1500, "k": 2, "car": false, "c": 4348.2, "sv": 39.96, "svc": 39.98, "b": 50, "w": 1, "bk": 5, "cr": 44, "ow": 2, "ob": 10, "oc": 88, "fx": 312000.0, "vr": 122820.0, "slow": 49.4, "mean": 33.8, "ex": 10.6, "exmax": 24.9, "mg": 0.1, "late": 0, "bs": 100.0}, {"s": 1500, "k": 3, "car": false, "c": 3496.76, "sv": 51.72, "svc": 51.73, "b": 35, "w": 0, "bk": 10, "cr": 25, "ow": 0, "ob": 30, "oc": 70, "fx": 230000.0, "vr": 119676.0, "slow": 52.5, "mean": 37.9, "ex": 14.7, "exmax": 24.6, "mg": 0.4, "late": 0, "bs": 100.0}, {"s": 1500, "k": 4, "car": false, "c": 3260.42, "sv": 54.98, "svc": 54.99, "b": 29, "w": 0, "bk": 18, "cr": 11, "ow": 0, "ob": 68, "oc": 32, "fx": 210000.0, "vr": 116042.0, "slow": 56.7, "mean": 40.6, "ex": 17.3, "exmax": 24.9, "mg": 0.1, "late": 0, "bs": 100.0}, {"s": 1500, "k": 1, "car": true, "c": 7244.27, "sv": -0.02, "svc": 0.0, "b": 100, "w": 0, "bk": 0, "cr": 100, "ow": 0, "ob": 0, "oc": 100, "fx": 600000.0, "vr": 124427.0, "slow": 38.7, "mean": 23.2, "ex": 0.0, "exmax": 0.0, "mg": 25.0, "late": 0, "bs": 0.0}, {"s": 1800, "k": 1, "car": false, "c": 7233.44, "sv": 0.0, "svc": 0.15, "b": 100, "w": 5, "bk": 0, "cr": 95, "ow": 5, "ob": 0, "oc": 95, "fx": 610000.0, "vr": 113344.0, "slow": 50.5, "mean": 24.6, "ex": 1.3, "exmax": 28.9, "mg": 1.1, "late": 0, "bs": 0.0}, {"s": 1800, "k": 2, "car": false, "c": 4302.03, "sv": 40.53, "svc": 40.61, "b": 50, "w": 3, "bk": 3, "cr": 44, "ow": 6, "ob": 6, "oc": 88, "fx": 312000.0, "vr": 118203.0, "slow": 57.0, "mean": 35.1, "ex": 11.8, "exmax": 29.8, "mg": 0.2, "late": 0, "bs": 100.0}, {"s": 1800, "k": 3, "car": false, "c": 3387.07, "sv": 53.17, "svc": 53.24, "b": 34, "w": 0, "bk": 11, "cr": 23, "ow": 0, "ob": 33, "oc": 67, "fx": 226000.0, "vr": 112707.0, "slow": 57.9, "mean": 39.3, "ex": 16.0, "exmax": 30.0, "mg": 0.0, "late": 0, "bs": 100.0}, {"s": 1800, "k": 4, "car": false, "c": 3099.09, "sv": 57.16, "svc": 57.22, "b": 27, "w": 0, "bk": 20, "cr": 7, "ow": 0, "ob": 76, "oc": 24, "fx": 202000.0, "vr": 107909.0, "slow": 58.6, "mean": 42.6, "ex": 19.4, "exmax": 30.0, "mg": 0.0, "late": 0, "bs": 100.0}, {"s": 1800, "k": 1, "car": true, "c": 7244.27, "sv": -0.15, "svc": 0.0, "b": 100, "w": 0, "bk": 0, "cr": 100, "ow": 0, "ob": 0, "oc": 100, "fx": 600000.0, "vr": 124427.0, "slow": 38.7, "mean": 23.2, "ex": 0.0, "exmax": 0.0, "mg": 30.0, "late": 0, "bs": 0.0}, {"s": 2100, "k": 1, "car": false, "c": 7227.85, "sv": 0.0, "svc": 0.23, "b": 100, "w": 6, "bk": 0, "cr": 94, "ow": 6, "ob": 0, "oc": 94, "fx": 612000.0, "vr": 110785.0, "slow": 53.6, "mean": 24.9, "ex": 1.6, "exmax": 30.7, "mg": 4.3, "late": 0, "bs": 0.0}, {"s": 2100, "k": 2, "car": false, "c": 4267.39, "sv": 40.96, "svc": 41.09, "b": 50, "w": 6, "bk": 2, "cr": 42, "ow": 12, "ob": 4, "oc": 84, "fx": 316000.0, "vr": 110739.0, "slow": 63.3, "mean": 37.1, "ex": 13.8, "exmax": 34.2, "mg": 0.8, "late": 0, "bs": 100.0}, {"s": 2100, "k": 3, "car": false, "c": 3358.14, "sv": 53.54, "svc": 53.64, "b": 34, "w": 1, "bk": 9, "cr": 24, "ow": 3, "ob": 27, "oc": 70, "fx": 224000.0, "vr": 111814.0, "slow": 59.5, "mean": 41.6, "ex": 18.3, "exmax": 34.8, "mg": 0.2, "late": 0, "bs": 100.0}, {"s": 2100, "k": 4, "car": false, "c": 2961.48, "sv": 59.03, "svc": 59.12, "b": 26, "w": 0, "bk": 10, "cr": 16, "ow": 0, "ob": 38, "oc": 62, "fx": 176000.0, "vr": 120148.0, "slow": 62.0, "mean": 44.8, "ex": 21.6, "exmax": 34.8, "mg": 0.2, "late": 0, "bs": 100.0}, {"s": 2100, "k": 1, "car": true, "c": 7244.27, "sv": -0.23, "svc": 0.0, "b": 100, "w": 0, "bk": 0, "cr": 100, "ow": 0, "ob": 0, "oc": 100, "fx": 600000.0, "vr": 124427.0, "slow": 38.7, "mean": 23.2, "ex": 0.0, "exmax": 0.0, "mg": 35.0, "late": 0, "bs": 0.0}, {"s": 2400, "k": 1, "car": false, "c": 7227.85, "sv": 0.0, "svc": 0.23, "b": 100, "w": 6, "bk": 0, "cr": 94, "ow": 6, "ob": 0, "oc": 94, "fx": 612000.0, "vr": 110785.0, "slow": 53.6, "mean": 24.9, "ex": 1.6, "exmax": 30.7, "mg": 9.3, "late": 0, "bs": 0.0}, {"s": 2400, "k": 2, "car": false, "c": 4243.8, "sv": 41.29, "svc": 41.42, "b": 50, "w": 13, "bk": 3, "cr": 34, "ow": 26, "ob": 6, "oc": 68, "fx": 332000.0, "vr": 92380.0, "slow": 68.4, "mean": 40.6, "ex": 17.3, "exmax": 39.9, "mg": 0.1, "late": 0, "bs": 100.0}, {"s": 2400, "k": 3, "car": false, "c": 3296.53, "sv": 54.39, "svc": 54.49, "b": 34, "w": 3, "bk": 8, "cr": 23, "ow": 8, "ob": 24, "oc": 68, "fx": 226000.0, "vr": 103653.0, "slow": 66.2, "mean": 43.5, "ex": 20.3, "exmax": 40.0, "mg": 0.0, "late": 0, "bs": 100.0}, {"s": 2400, "k": 4, "car": false, "c": 2869.67, "sv": 60.3, "svc": 60.39, "b": 25, "w": 0, "bk": 9, "cr": 16, "ow": 0, "ob": 36, "oc": 64, "fx": 168000.0, "vr": 118967.0, "slow": 66.9, "mean": 49.1, "ex": 25.8, "exmax": 39.8, "mg": 0.2, "late": 0, "bs": 100.0}, {"s": 2400, "k": 1, "car": true, "c": 7244.27, "sv": -0.23, "svc": 0.0, "b": 100, "w": 0, "bk": 0, "cr": 100, "ow": 0, "ob": 0, "oc": 100, "fx": 600000.0, "vr": 124427.0, "slow": 38.7, "mean": 23.2, "ex": 0.0, "exmax": 0.0, "mg": 40.0, "late": 0, "bs": 0.0}, {"s": 2700, "k": 1, "car": false, "c": 7227.85, "sv": 0.0, "svc": 0.23, "b": 100, "w": 6, "bk": 0, "cr": 94, "ow": 6, "ob": 0, "oc": 94, "fx": 612000.0, "vr": 110785.0, "slow": 53.6, "mean": 24.9, "ex": 1.6, "exmax": 30.7, "mg": 14.3, "late": 0, "bs": 0.0}, {"s": 2700, "k": 2, "car": false, "c": 4215.92, "sv": 41.67, "svc": 41.8, "b": 50, "w": 13, "bk": 2, "cr": 35, "ow": 26, "ob": 4, "oc": 70, "fx": 330000.0, "vr": 91592.0, "slow": 72.2, "mean": 42.2, "ex": 18.9, "exmax": 44.3, "mg": 0.7, "late": 0, "bs": 100.0}, {"s": 2700, "k": 3, "car": false, "c": 3272.6, "sv": 54.72, "svc": 54.83, "b": 34, "w": 3, "bk": 7, "cr": 24, "ow": 9, "ob": 21, "oc": 70, "fx": 224000.0, "vr": 103260.0, "slow": 66.7, "mean": 44.2, "ex": 21.0, "exmax": 44.9, "mg": 0.1, "late": 0, "bs": 99.0}, {"s": 2700, "k": 4, "car": false, "c": 2809.15, "sv": 61.13, "svc": 61.22, "b": 25, "w": 0, "bk": 11, "cr": 14, "ow": 0, "ob": 44, "oc": 56, "fx": 172000.0, "vr": 108915.0, "slow": 69.0, "mean": 49.9, "ex": 26.6, "exmax": 45.0, "mg": 0.0, "late": 0, "bs": 100.0}, {"s": 2700, "k": 1, "car": true, "c": 7244.27, "sv": -0.23, "svc": 0.0, "b": 100, "w": 0, "bk": 0, "cr": 100, "ow": 0, "ob": 0, "oc": 100, "fx": 600000.0, "vr": 124427.0, "slow": 38.7, "mean": 23.2, "ex": 0.0, "exmax": 0.0, "mg": 45.0, "late": 0, "bs": 0.0}], "gen": [{"f": "STAGE1_2", "s": 900, "n": [276, 831, 277, 4], "t3": 1.5, "t4": 1.6, "g3": 0.0, "g4": 0.1}, {"f": "STAGE1_2", "s": 1200, "n": [288, 1542, 1530, 165], "t3": 1.6, "t4": 4.3, "g3": 0.4, "g4": 0.5}, {"f": "STAGE1_2", "s": 1500, "n": [294, 2423, 4452, 1404], "t3": 1.7, "t4": 13.9, "g3": 0.4, "g4": 0.5}, {"f": "STAGE1_2", "s": 1800, "n": [297, 3400, 10511, 6660], "t3": 2.1, "t4": 45.8, "g3": 0.8, "g4": 1.2}, {"f": "STAGE1_2", "s": 2100, "n": [298, 4502, 21372, 23396], "t3": 4.0, "t4": 139.9, "g3": 1.6, "g4": 3.2}, {"f": "STAGE1_2", "s": 2400, "n": [298, 5622, 38225, 67050], "t3": 5.2, "t4": 357.6, "g3": 4.4, "g4": 5.5}, {"f": "STAGE1_2", "s": 2700, "n": [298, 6764, 61989, 165156], "t3": 6.6, "t4": 805.2, "g3": 25.3, "g4": 12.8}, {"f": "STAGE1_1", "s": 900, "n": [273, 1003, 797, 144], "t3": 1.4, "t4": 3.1, "g3": 0.1, "g4": 0.1}, {"f": "STAGE1_1", "s": 1200, "n": [283, 1799, 3045, 1783], "t3": 1.6, "t4": 15.2, "g3": 0.2, "g4": 0.4}, {"f": "STAGE1_1", "s": 1500, "n": [292, 2779, 8419, 8991], "t3": 2.3, "t4": 60.0, "g3": 0.6, "g4": 1.1}, {"f": "STAGE1_1", "s": 1800, "n": [297, 3843, 18082, 31513], "t3": 2.6, "t4": 174.4, "g3": 0.7, "g4": 4.8}, {"f": "STAGE1_1", "s": 2100, "n": [297, 4983, 33409, 86694], "t3": 3.5, "t4": 432.6, "g3": 2.0, "g4": 10.0}, {"f": "STAGE1_13", "s": 900, "n": [265, 277, 41, 0], "t3": 1.7, "t4": 1.8, "g3": 0.0, "g4": 0.0}, {"f": "STAGE1_13", "s": 1200, "n": [282, 514, 229, 7], "t3": 1.9, "t4": 2.0, "g3": 0.1, "g4": 0.1}, {"f": "STAGE1_13", "s": 1500, "n": [294, 807, 636, 69], "t3": 1.4, "t4": 2.1, "g3": 0.1, "g4": 0.1}, {"f": "STAGE1_13", "s": 1800, "n": [298, 1150, 1557, 463], "t3": 1.5, "t4": 4.4, "g3": 0.1, "g4": 0.2}, {"f": "STAGE1_13", "s": 2100, "n": [299, 1560, 2898, 1534], "t3": 1.8, "t4": 11.1, "g3": 0.3, "g4": 0.3}, {"f": "STAGE1_14", "s": 900, "n": [255, 249, 21, 0], "t3": 1.4, "t4": 1.4, "g3": 0.0, "g4": 0.0}, {"f": "STAGE1_14", "s": 1200, "n": [268, 472, 117, 1], "t3": 1.9, "t4": 1.9, "g3": 0.1, "g4": 0.1}, {"f": "STAGE1_14", "s": 1500, "n": [276, 695, 358, 12], "t3": 1.6, "t4": 1.8, "g3": 0.1, "g4": 0.1}, {"f": "STAGE1_14", "s": 1800, "n": [285, 976, 800, 94], "t3": 1.4, "t4": 2.0, "g3": 0.1, "g4": 0.1}, {"f": "STAGE1_14", "s": 2100, "n": [290, 1298, 1582, 326], "t3": 1.5, "t4": 3.4, "g3": 0.5, "g4": 0.2}], "rb": [{"f": "STAGE1_2", "s": 900, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_2", "s": 900, "k": 2, "sv": 37.25, "b": 52}, {"f": "STAGE1_2", "s": 900, "k": 3, "sv": 44.48, "b": 41}, {"f": "STAGE1_2", "s": 900, "k": 4, "sv": 44.52, "b": 41}, {"f": "STAGE1_2", "s": 1200, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_2", "s": 1200, "k": 2, "sv": 38.97, "b": 51}, {"f": "STAGE1_2", "s": 1200, "k": 3, "sv": 49.29, "b": 36}, {"f": "STAGE1_2", "s": 1200, "k": 4, "sv": 51.43, "b": 33}, {"f": "STAGE1_2", "s": 1500, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_2", "s": 1500, "k": 2, "sv": 39.96, "b": 50}, {"f": "STAGE1_2", "s": 1500, "k": 3, "sv": 51.72, "b": 35}, {"f": "STAGE1_2", "s": 1500, "k": 4, "sv": 54.98, "b": 29}, {"f": "STAGE1_2", "s": 1800, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_2", "s": 1800, "k": 2, "sv": 40.53, "b": 50}, {"f": "STAGE1_2", "s": 1800, "k": 3, "sv": 53.17, "b": 34}, {"f": "STAGE1_2", "s": 1800, "k": 4, "sv": 57.16, "b": 27}, {"f": "STAGE1_2", "s": 2100, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_2", "s": 2100, "k": 2, "sv": 40.96, "b": 50}, {"f": "STAGE1_2", "s": 2100, "k": 3, "sv": 53.54, "b": 34}, {"f": "STAGE1_2", "s": 2100, "k": 4, "sv": 59.03, "b": 26}, {"f": "STAGE1_1", "s": 900, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_1", "s": 900, "k": 2, "sv": 38.12, "b": 51}, {"f": "STAGE1_1", "s": 900, "k": 3, "sv": 45.99, "b": 41}, {"f": "STAGE1_1", "s": 900, "k": 4, "sv": 46.9, "b": 40}, {"f": "STAGE1_1", "s": 1200, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_1", "s": 1200, "k": 2, "sv": 39.43, "b": 50}, {"f": "STAGE1_1", "s": 1200, "k": 3, "sv": 50.26, "b": 35}, {"f": "STAGE1_1", "s": 1200, "k": 4, "sv": 52.18, "b": 33}, {"f": "STAGE1_1", "s": 1500, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_1", "s": 1500, "k": 2, "sv": 40.28, "b": 51}, {"f": "STAGE1_1", "s": 1500, "k": 3, "sv": 51.94, "b": 34}, {"f": "STAGE1_1", "s": 1500, "k": 4, "sv": 56.91, "b": 28}, {"f": "STAGE1_1", "s": 1800, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_1", "s": 1800, "k": 2, "sv": 41.33, "b": 50}, {"f": "STAGE1_1", "s": 1800, "k": 3, "sv": 53.33, "b": 34}, {"f": "STAGE1_1", "s": 1800, "k": 4, "sv": 58.45, "b": 26}, {"f": "STAGE1_1", "s": 2100, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_1", "s": 2100, "k": 2, "sv": 41.69, "b": 50}, {"f": "STAGE1_1", "s": 2100, "k": 3, "sv": 54.41, "b": 34}, {"f": "STAGE1_1", "s": 2100, "k": 4, "sv": 60.1, "b": 26}, {"f": "STAGE1_13", "s": 900, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_13", "s": 900, "k": 2, "sv": 27.22, "b": 61}, {"f": "STAGE1_13", "s": 900, "k": 3, "sv": 30.72, "b": 56}, {"f": "STAGE1_13", "s": 900, "k": 4, "sv": 30.72, "b": 56}, {"f": "STAGE1_13", "s": 1200, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_13", "s": 1200, "k": 2, "sv": 30.58, "b": 58}, {"f": "STAGE1_13", "s": 1200, "k": 3, "sv": 36.28, "b": 50}, {"f": "STAGE1_13", "s": 1200, "k": 4, "sv": 37.02, "b": 50}, {"f": "STAGE1_13", "s": 1500, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_13", "s": 1500, "k": 2, "sv": 32.13, "b": 55}, {"f": "STAGE1_13", "s": 1500, "k": 3, "sv": 40.26, "b": 45}, {"f": "STAGE1_13", "s": 1500, "k": 4, "sv": 41.31, "b": 43}, {"f": "STAGE1_13", "s": 1800, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_13", "s": 1800, "k": 2, "sv": 34.53, "b": 53}, {"f": "STAGE1_13", "s": 1800, "k": 3, "sv": 43.48, "b": 40}, {"f": "STAGE1_13", "s": 1800, "k": 4, "sv": 45.32, "b": 39}, {"f": "STAGE1_13", "s": 2100, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_13", "s": 2100, "k": 2, "sv": 35.4, "b": 53}, {"f": "STAGE1_13", "s": 2100, "k": 3, "sv": 44.88, "b": 39}, {"f": "STAGE1_13", "s": 2100, "k": 4, "sv": 47.33, "b": 35}, {"f": "STAGE1_14", "s": 900, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_14", "s": 900, "k": 2, "sv": 29.71, "b": 57}, {"f": "STAGE1_14", "s": 900, "k": 3, "sv": 31.85, "b": 56}, {"f": "STAGE1_14", "s": 900, "k": 4, "sv": 31.85, "b": 56}, {"f": "STAGE1_14", "s": 1200, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_14", "s": 1200, "k": 2, "sv": 32.17, "b": 54}, {"f": "STAGE1_14", "s": 1200, "k": 3, "sv": 38.34, "b": 46}, {"f": "STAGE1_14", "s": 1200, "k": 4, "sv": 38.34, "b": 46}, {"f": "STAGE1_14", "s": 1500, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_14", "s": 1500, "k": 2, "sv": 33.37, "b": 52}, {"f": "STAGE1_14", "s": 1500, "k": 3, "sv": 41.19, "b": 43}, {"f": "STAGE1_14", "s": 1500, "k": 4, "sv": 41.67, "b": 41}, {"f": "STAGE1_14", "s": 1800, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_14", "s": 1800, "k": 2, "sv": 34.36, "b": 52}, {"f": "STAGE1_14", "s": 1800, "k": 3, "sv": 43.41, "b": 40}, {"f": "STAGE1_14", "s": 1800, "k": 4, "sv": 44.4, "b": 38}, {"f": "STAGE1_14", "s": 2100, "k": 1, "sv": 0.0, "b": 100}, {"f": "STAGE1_14", "s": 2100, "k": 2, "sv": 34.94, "b": 52}, {"f": "STAGE1_14", "s": 2100, "k": 3, "sv": 44.48, "b": 38}, {"f": "STAGE1_14", "s": 2100, "k": 4, "sv": 46.48, "b": 36}], "fc": [{"fc": "A_original", "k": 1, "car": true, "c": 7244.27, "sv": -0.15, "b": 100, "w": 0, "bk": 0, "cr": 100}, {"fc": "A_original", "k": 1, "car": false, "c": 7233.44, "sv": 0.0, "b": 100, "w": 5, "bk": 0, "cr": 95}, {"fc": "A_original", "k": 2, "car": false, "c": 4302.03, "sv": 40.53, "b": 50, "w": 3, "bk": 3, "cr": 44}, {"fc": "A_original", "k": 3, "car": false, "c": 3387.07, "sv": 53.17, "b": 34, "w": 0, "bk": 11, "cr": 23}, {"fc": "A_original", "k": 4, "car": false, "c": 3099.09, "sv": 57.16, "b": 27, "w": 0, "bk": 20, "cr": 7}, {"fc": "B_uniform6000", "k": 1, "car": true, "c": 7244.27, "sv": -8.47, "b": 100, "w": 0, "bk": 0, "cr": 100}, {"fc": "B_uniform6000", "k": 1, "car": false, "c": 6678.89, "sv": 0.0, "b": 100, "w": 30, "bk": 20, "cr": 50}, {"fc": "B_uniform6000", "k": 2, "car": false, "c": 3610.12, "sv": 45.95, "b": 50, "w": 30, "bk": 20, "cr": 0}, {"fc": "B_uniform6000", "k": 3, "car": false, "c": 2977.18, "sv": 55.42, "b": 34, "w": 5, "bk": 20, "cr": 9}, {"fc": "B_uniform6000", "k": 4, "car": false, "c": 2680.05, "sv": 59.87, "b": 28, "w": 3, "bk": 20, "cr": 5}, {"fc": "C_uniform5000", "k": 1, "car": true, "c": 6244.27, "sv": -9.96, "b": 100, "w": 0, "bk": 0, "cr": 100}, {"fc": "C_uniform5000", "k": 1, "car": false, "c": 5678.89, "sv": 0.0, "b": 100, "w": 30, "bk": 20, "cr": 50}, {"fc": "C_uniform5000", "k": 2, "car": false, "c": 3110.12, "sv": 45.23, "b": 50, "w": 30, "bk": 20, "cr": 0}, {"fc": "C_uniform5000", "k": 3, "car": false, "c": 2634.79, "sv": 53.6, "b": 35, "w": 8, "bk": 20, "cr": 7}, {"fc": "C_uniform5000", "k": 4, "car": false, "c": 2400.05, "sv": 57.74, "b": 28, "w": 3, "bk": 20, "cr": 5}, {"fc": "D_walk_cheapest", "k": 1, "car": true, "c": 6244.27, "sv": -13.89, "b": 100, "w": 0, "bk": 0, "cr": 100}, {"fc": "D_walk_cheapest", "k": 1, "car": false, "c": 5482.59, "sv": 0.0, "b": 100, "w": 30, "bk": 0, "cr": 70}, {"fc": "D_walk_cheapest", "k": 2, "car": false, "c": 3087.2, "sv": 43.69, "b": 51, "w": 30, "bk": 0, "cr": 21}, {"fc": "D_walk_cheapest", "k": 3, "car": false, "c": 2786.92, "sv": 49.17, "b": 45, "w": 30, "bk": 0, "cr": 15}, {"fc": "D_walk_cheapest", "k": 4, "car": false, "c": 2725.2, "sv": 50.29, "b": 44, "w": 30, "bk": 0, "cr": 14}], "files": [{"f": "STAGE1_2", "d": 1.76, "ns": 6.6, "ew": 8.6}, {"f": "STAGE1_1", "d": 1.74, "ns": 6.6, "ew": 8.7}, {"f": "STAGE1_13", "d": 0.24, "ns": 17.0, "ew": 24.7}, {"f": "STAGE1_14", "d": 0.27, "ns": 15.9, "ew": 23.5}]};
+const NS="http://www.w3.org/2000/svg", SL=[900,1200,1500,1800,2100,2400,2700], REF=1800, HK=3;
+const fmt=(n,d=0)=>Number(n).toLocaleString('en-US',{minimumFractionDigits:d,maximumFractionDigits:d});
+const el=(t,a={},txt)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);if(txt!=null)e.textContent=txt;return e;};
+const cv=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const KC={1:'--k1',2:'--k2',3:'--k3',4:'--k4'};
+const m=(s,k,car=false)=>D.main.find(d=>d.s===s&&d.k===k&&d.car===car);
+const tip=document.getElementById('tip');
+function showTip(ev,h){tip.innerHTML=h;tip.style.opacity=1;const r=tip.getBoundingClientRect();
+  let x=ev.clientX+14,y=ev.clientY-r.height-12;if(x+r.width>innerWidth-10)x=ev.clientX-r.width-14;if(y<8)y=ev.clientY+16;
   tip.style.left=x+'px';tip.style.top=y+'px';}
 function hideTip(){tip.style.opacity=0;}
+function frame(s,W,H,L,R,T,B,y0,y1,ticks,yfmt,ylab,log){
+  const g=el('g');s.appendChild(g);const pw=W-L-R,ph=H-T-B;
+  const Y=log?(v=>T+ph*(1-(Math.log10(v)-Math.log10(y0))/(Math.log10(y1)-Math.log10(y0)))):(v=>T+ph*(1-(v-y0)/(y1-y0)));
+  ticks.forEach(v=>{g.appendChild(el('line',{x1:L,x2:L+pw,y1:Y(v),y2:Y(v),stroke:cv('--grid')}));
+    g.appendChild(el('text',{x:L-8,y:Y(v)+3.5,'text-anchor':'end',class:'ax'},yfmt(v)));});
+  if(ylab)g.appendChild(el('text',{x:4,y:T-10,'text-anchor':'start',class:'axl'},ylab));
+  return {g,Y,pw,ph};
+}
+function line(g,pts,color,w=2,dash){
+  g.appendChild(el('path',{d:pts.map((p,i)=>(i?'L':'M')+p[0]+' '+p[1]).join(' '),fill:'none',stroke:color,'stroke-width':w,
+    'stroke-linejoin':'round','stroke-linecap':'round','stroke-dasharray':dash||''}));
+}
+function dot(g,x,y,color,r=3.6){g.appendChild(el('circle',{cx:x,cy:y,r:r,fill:color,stroke:cv('--surface'),'stroke-width':1.6}));}
+function xAxis(g,X,vals,y,lab,W,H,L,pw){vals.forEach(v=>g.appendChild(el('text',{x:X(v),y:y,'text-anchor':'middle',class:'ax'},v/60)));
+  g.appendChild(el('text',{x:L+pw/2,y:H-8,'text-anchor':'middle',class:'axl'},lab));}
 
-function frame(s,W,H,L,R,T,B,y0,y1,yStep,yLabel,yFmt){
-  const pw=W-L-R, ph=H-T-B, g=el('g'); s.appendChild(g);
-  const Y=v=>T+ph*(1-(v-y0)/(y1-y0));
-  for(let v=y0; v<=y1+1e-9; v+=yStep){
-    g.appendChild(el('line',{x1:L,x2:L+pw,y1:Y(v),y2:Y(v),stroke:cssv('--grid'),'stroke-width':1}));
-    txt(g,L-8,Y(v)+3.5,yFmt(v),'ax','end');
-  }
-  if(yLabel) txt(g,4,T-12,yLabel,'axl','start');
-  return {g,pw,ph,Y};
+/* tiles + text */
+function tiles(){
+  const h=m(REF,HK), b1=m(REF,1);
+  document.getElementById('t-hero').textContent='−'+h.sv.toFixed(1)+'%';
+  document.getElementById('t-hero-n').textContent=`cost per order vs no bundling: ${fmt(b1.c)} → ${fmt(h.c)} won, riders ${b1.b} → ${h.b}. Same vs all-car (${fmt(m(REF,1,true).c)} won).`;
+  const sh=SL.map(s=>{const a=m(s,1).c,b=m(s,2).c,c=m(s,3).c;return (a-b)/(a-c)*100;});
+  document.getElementById('t-pair').textContent=Math.round(Math.min(...sh))+'–'+Math.round(Math.max(...sh))+'%';
+  const G=D.gen.filter(g=>g.f==='STAGE1_2');
+  const max3=Math.max(...D.gen.map(g=>g.t3+g.g3));
+  document.getElementById('t-comp').textContent='≤ '+Math.ceil(max3)+' s';
+  const first=G.filter(g=>g.t4+g.g4>100).sort((a,b)=>a.s-b.s)[0];
+  document.getElementById('t-comp-n').textContent=`to solve max 3 in every case. Max 4 exceeds the 100 s limit from ${first.s/60} min of slack (${Math.round(first.t4+first.g4)} s).`;
+  document.getElementById('f1').textContent=`At the real-world cap of 3 orders and the original 30-minute slack, cost per order falls from ${fmt(b1.c)} to ${fmt(h.c)} won (−${h.sv.toFixed(1)}%), because riders fall from ${b1.b} to ${h.b}. Up to 4 orders gives −${m(REF,4).sv.toFixed(1)}% (${m(REF,4).b} riders). Against the all-car baseline the saving is the same to one decimal, since no bundling and all-car differ by at most 0.2%.`;
 }
 
-/* chart 1: cost vs slack */
+/* c1 hero */
+let MODE='cost';
 function c1(){
-  const s=document.getElementById('c1'); s.textContent='';
-  const W=760,H=340,L=60,R=150,T=30,B=50;
-  const {g,pw,ph,Y}=frame(s,W,H,L,R,T,B,2500,7500,1000,'won / order',v=>fmt(v));
-  const X=i=>L+pw*i/(SL.length-1);
-  SL.forEach((sl,i)=>txt(g,X(i),H-B+20,mins(sl),'ax'));
-  txt(g,L+pw/2,H-12,'Slack beyond a direct car trip (minutes)  →  looser promise','axl');
-  // original data marker
-  const ox=X(3);
-  g.appendChild(el('line',{x1:ox,x2:ox,y1:T,y2:T+ph,stroke:cssv('--accent'),'stroke-width':1.2,'stroke-dasharray':'4 4'}));
-  txt(g,ox+6,Y(6000),'original data (30 min)','dlab','start',cssv('--accent'));
-  // baseline
-  const by=Y(get(900,1,true).c);
-  g.appendChild(el('line',{x1:L,x2:L+pw,y1:by,y2:by,stroke:cssv('--base'),'stroke-width':1.5,'stroke-dasharray':'6 5'}));
-  [1,2,3,4].forEach(k=>{
-    let d=''; SL.forEach((sl,i)=>{d+=(i?' L ':'M ')+X(i)+' '+Y(get(sl,k).c);});
-    g.appendChild(el('path',{d,fill:'none',stroke:cssv(KC[k]),'stroke-width':k===4?2.6:2,'stroke-linejoin':'round','stroke-linecap':'round'}));
-    SL.forEach((sl,i)=>g.appendChild(el('circle',{cx:X(i),cy:Y(get(sl,k).c),r:k===4?4.5:3.5,fill:cssv(KC[k]),stroke:cssv('--surface'),'stroke-width':1.5})));
-  });
-  // right-side labels
-  const lab=[[1,'no bundling',14],[2,'max 2',4],[3,'max 3',-2],[4,'max 4',10]];
-  lab.forEach(([k,t,dy])=>{const v=get(2700,k).c; txt(g,L+pw+8,Y(v)+4+dy,`${t} · ${fmt(v)}`,'dlab','start',cssv(KC[k]));});
-  txt(g,L+pw+8,by-6,`one car/order · ${fmt(get(900,1,true).c)}`,'dlab','start',cssv('--base'));
-  // left labels for max 4
-  txt(g,X(0)+6,Y(get(900,4).c)+22,fmt(get(900,4).c),'dlab','start',cssv('--k4'));
-  txt(g,ox+6,Y(get(1800,4).c)+18,fmt(get(1800,4).c),'dlab','start',cssv('--k4'));
-  // hover
-  const step=pw/(SL.length-1);
-  SL.forEach((sl,i)=>{
-    const hit=el('rect',{x:X(i)-step/2,y:T,width:step,height:ph,fill:'transparent'}); hit.style.cursor='crosshair';
-    hit.addEventListener('mousemove',ev=>showTip(ev,`<b>slack ${mins(sl)} min</b><br>`+
-      [1,2,3,4].map(k=>`max ${k}: ${fmt(get(sl,k).c)} · ${get(sl,k).b} riders`).join('<br>')+
-      `<br>one car/order: ${fmt(get(sl,1,true).c)}`));
-    hit.addEventListener('mouseleave',hideTip); g.appendChild(hit);
+  const s=document.getElementById('c1');s.textContent='';
+  const W=760,H=330,L=62,R=72,T=26,B=46;
+  const cost=MODE==='cost';
+  const y0=cost?2500:0,y1=cost?7600:65, ticks=cost?[3000,4000,5000,6000,7000]:[0,10,20,30,40,50,60];
+  const {g,Y,pw,ph}=frame(s,W,H,L,R,T,B,y0,y1,ticks,v=>cost?fmt(v):v+'%',cost?'won / order':'saving vs no bundling');
+  const X=v=>L+pw*(v-900)/1800;
+  xAxis(g,X,SL,H-B+18,'Delivery-time slack (minutes over a direct car trip)',W,H,L,pw);
+  g.appendChild(el('line',{x1:X(REF),x2:X(REF),y1:T,y2:T+ph,stroke:cv('--ink-3'),'stroke-dasharray':'2 4'}));
+  g.appendChild(el('text',{x:X(REF)+5,y:T+10,class:'dlab',fill:cv('--ink-3')},'original deadline'));
+  if(cost) line(g,SL.map(v=>[X(v),Y(m(v,1,true).c)]),cv('--car'),1.4,'5 4');
+  document.getElementById('lg-car').style.display=cost?'':'none';
+  for(const k of (cost?[1,2,3,4]:[2,3,4])){
+    const pts=SL.map(v=>[X(v),Y(cost?m(v,k).c:m(v,k).sv)]);
+    line(g,pts,cv(KC[k]),k===HK?3.2:1.8);
+    pts.forEach(p=>dot(g,p[0],p[1],cv(KC[k]),k===HK?4.2:3.2));
+    const last=m(2700,k);
+    g.appendChild(el('text',{x:X(2700)+8,y:Y(cost?last.c:last.sv)+(cost&&k===1?-6:4),class:'dlab',fill:cv(KC[k])},
+      cost?fmt(last.c):last.sv.toFixed(1)+'%'));
+  }
+  const h=m(REF,HK);
+  const hx=X(REF),hy=Y(cost?h.c:h.sv);
+  g.appendChild(el('circle',{cx:hx,cy:hy,r:9,fill:'none',stroke:cv('--accent'),'stroke-width':1.5}));
+  g.appendChild(el('text',{x:hx+14,y:hy-12,'text-anchor':'start',class:'dlab',fill:cv('--accent')},
+    cost?`${fmt(h.c)} won · −${h.sv.toFixed(1)}%`:`−${h.sv.toFixed(1)}% · ${h.b} riders`));
+  SL.forEach(v=>{
+    const r=el('rect',{x:X(v)-pw/12,y:T,width:pw/6,height:ph,fill:'transparent'});
+    r.addEventListener('mousemove',ev=>showTip(ev,`<b>slack ${v/60} min</b><br>`+
+      [1,2,3,4].map(k=>`max ${k}: ${fmt(m(v,k).c)} (${m(v,k).sv.toFixed(1)}%) · ${m(v,k).b} riders`).join('<br>')+
+      `<br>all-car: ${fmt(m(v,1,true).c)}`));
+    r.addEventListener('mouseleave',hideTip);
+    r.addEventListener('click',()=>{EX.s=v;explorer();});
+    g.appendChild(r);
   });
 }
 
-/* chart 2: step savings grouped bars */
+/* explorer */
+const EX={s:REF,k:HK};
+function segs(){
+  const S=document.getElementById('ex-s'),K=document.getElementById('ex-k');S.innerHTML='';K.innerHTML='';
+  SL.forEach(v=>{const b=document.createElement('button');b.type='button';b.textContent=v/60;b.onclick=()=>{EX.s=v;explorer();};b.dataset.v=v;S.appendChild(b);});
+  [1,2,3,4].forEach(v=>{const b=document.createElement('button');b.type='button';b.textContent=v;b.onclick=()=>{EX.k=v;explorer();};b.dataset.v=v;K.appendChild(b);});
+}
+function explorer(){
+  document.querySelectorAll('#ex-s button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.v===EX.s));
+  document.querySelectorAll('#ex-k button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.v===EX.k));
+  const d=m(EX.s,EX.k),car=m(EX.s,1,true);
+  const K=[['Cost / order',fmt(d.c,1),'won'],['Saving',d.sv.toFixed(1)+'%','vs no bundling'],['Riders',d.b,`walk ${d.w} · bike ${d.bk} · car ${d.cr}`],
+    ['Orders bundled',d.bs+'%','in bundles of 2+'],['Extra delay',d.ex.toFixed(1)+' min','mean, vs direct car'],
+    ['Slowest 10%',d.slow.toFixed(1)+' min',`all-car ${car.slow.toFixed(1)}`],['Late orders',d.late,`min margin ${d.mg.toFixed(1)} min`]];
+  document.getElementById('ex-out').innerHTML=K.map(x=>`<div class="kpi"><div class="k">${x[0]}</div><div class="v">${x[1]}</div><div class="n">${x[2]}</div></div>`).join('');
+}
+
+/* c2 step bars */
 function c2(){
-  const s=document.getElementById('c2'); s.textContent='';
-  const W=420,H=300,L=40,R=8,T=22,B=46;
-  const {g,pw,ph,Y}=frame(s,W,H,L,R,T,B,0,45,15,'% saved',v=>v);
-  const step=pw/SL.length, bw=step*0.24;
-  SL.forEach((sl,i)=>{
-    const c=[1,2,3,4].map(k=>get(sl,k).c);
-    const st=[1,2,3].map(j=>(c[j-1]-c[j])/c[j-1]*100);
-    st.forEach((v,j)=>{
-      const x=L+step*i+step*0.14+j*bw, y=Y(v);
-      g.appendChild(el('rect',{x,y,width:bw-2,height:Math.max(T+ph-y,1),rx:2,fill:cssv(KC[j+2])}));
-    });
-    txt(g,L+step*i+step/2,H-B+18,mins(sl),'ax');
-    const hit=el('rect',{x:L+step*i,y:T,width:step,height:ph,fill:'transparent'});
-    hit.addEventListener('mousemove',ev=>showTip(ev,`<b>slack ${mins(sl)} min</b><br>1→2: −${st[0].toFixed(1)}%<br>2→3: −${st[1].toFixed(1)}%<br>3→4: −${st[2].toFixed(1)}%`));
-    hit.addEventListener('mouseleave',hideTip); g.appendChild(hit);
+  const s=document.getElementById('c2');s.textContent='';
+  const W=440,H=300,L=40,R=8,T=20,B=40;
+  const {g,Y,pw,ph}=frame(s,W,H,L,R,T,B,0,45,[0,10,20,30,40],v=>v+'%','extra saving');
+  const step=pw/SL.length,bw=step*0.24;
+  SL.forEach((v,i)=>{
+    const c=[1,2,3,4].map(k=>m(v,k).c);
+    const st=[(c[0]-c[1])/c[0]*100,(c[1]-c[2])/c[1]*100,(c[2]-c[3])/c[2]*100];
+    st.forEach((p,j)=>{const x=L+step*i+step*0.14+bw*j;
+      g.appendChild(el('rect',{x:x,y:Y(p),width:bw-2,height:Math.max(Y(0)-Y(p),1),rx:2,fill:cv(KC[j+2])}));});
+    g.appendChild(el('text',{x:L+step*i+step/2,y:H-B+16,'text-anchor':'middle',class:'ax'},v/60));
+    const r=el('rect',{x:L+step*i,y:T,width:step,height:ph,fill:'transparent'});
+    r.addEventListener('mousemove',ev=>showTip(ev,`<b>slack ${v/60} min</b><br>1→2: ${st[0].toFixed(1)}%<br>2→3: ${st[1].toFixed(1)}%<br>3→4: ${st[2].toFixed(1)}%`));
+    r.addEventListener('mouseleave',hideTip);g.appendChild(r);
   });
-  txt(g,L+pw/2,H-8,'Slack (minutes)','axl');
+  g.appendChild(el('text',{x:L+pw/2,y:H-6,'text-anchor':'middle',class:'axl'},'Slack (min)'));
 }
 
-/* generic line chart over slack */
-function lines(id,series,y0,y1,yStep,yLabel,yFmt,tipFn){
-  const s=document.getElementById(id); s.textContent='';
-  const W=420,H=300,L=44,R=12,T=22,B=46;
-  const {g,pw,ph,Y}=frame(s,W,H,L,R,T,B,y0,y1,yStep,yLabel,yFmt);
-  const xs=series[0].pts.map(p=>p[0]);
-  const X=v=>L+pw*(v-xs[0])/(xs[xs.length-1]-xs[0]);
-  xs.forEach(v=>txt(g,X(v),H-B+18,mins(v),'ax'));
-  txt(g,L+pw/2,H-8,'Slack (minutes)','axl');
-  series.forEach(sr=>{
-    let d=''; sr.pts.forEach((p,i)=>{d+=(i?' L ':'M ')+X(p[0])+' '+Y(p[1]);});
-    const a={d,fill:'none',stroke:cssv(sr.color),'stroke-width':2,'stroke-linejoin':'round'};
-    if(sr.dash) a['stroke-dasharray']='5 4';
-    g.appendChild(el('path',a));
-    sr.pts.forEach(p=>g.appendChild(el('circle',{cx:X(p[0]),cy:Y(p[1]),r:3.2,fill:cssv(sr.color),stroke:cssv('--surface'),'stroke-width':1.2})));
-    if(sr.label){const p=sr.pts[sr.pts.length-1]; txt(g,X(p[0])-4,Y(p[1])+(sr.ldy||-8),sr.label,'dlab','end',cssv(sr.color));}
-  });
-  const step=pw/(xs.length-1);
-  xs.forEach(v=>{
-    const hit=el('rect',{x:X(v)-step/2,y:T,width:step,height:ph,fill:'transparent'});
-    hit.addEventListener('mousemove',ev=>showTip(ev,tipFn(v))); hit.addEventListener('mouseleave',hideTip); g.appendChild(hit);
-  });
-}
-
+/* c3 wait */
 function c3(){
-  const ser=[1,2,3,4].map(k=>({color:KC[k],pts:SL.map(sl=>[sl,get(sl,k).slow])}));
-  lines('c3',ser,35,75,10,'minutes',v=>v,sl=>`<b>slack ${mins(sl)} min</b><br>`+
-    [1,2,3,4].map(k=>`max ${k}: ${get(sl,k).slow.toFixed(1)} min`).join('<br>')+`<br>one car/order: ${get(sl,1,true).slow.toFixed(1)} min`);
+  const s=document.getElementById('c3');s.textContent='';
+  const W=440,H=300,L=40,R=40,T=20,B=40;
+  const {g,Y,pw,ph}=frame(s,W,H,L,R,T,B,30,75,[30,40,50,60,70],v=>v,'min');
+  const X=v=>L+pw*(v-900)/1800;
+  xAxis(g,X,SL,H-B+16,'Slack (min)',W,H,L,pw);
+  line(g,SL.map(v=>[X(v),Y(m(v,1,true).slow)]),cv('--car'),1.4,'5 4');
+  [2,3,4].forEach(k=>{const p=SL.map(v=>[X(v),Y(m(v,k).slow)]);line(g,p,cv(KC[k]),k===HK?2.6:1.6);p.forEach(q=>dot(g,q[0],q[1],cv(KC[k]),2.8));});
+  g.appendChild(el('text',{x:X(2700)+4,y:Y(m(2700,1,true).slow)+4,class:'dlab',fill:cv('--ink-3')},fmt(m(2700,1,true).slow,1)));
+  SL.forEach(v=>{const r=el('rect',{x:X(v)-pw/12,y:T,width:pw/6,height:ph,fill:'transparent'});
+    r.addEventListener('mousemove',ev=>showTip(ev,`<b>slack ${v/60} min</b><br>`+[2,3,4].map(k=>`max ${k}: ${m(v,k).slow.toFixed(1)} min`).join('<br>')+`<br>all-car: ${m(v,1,true).slow.toFixed(1)} min`));
+    r.addEventListener('mouseleave',hideTip);g.appendChild(r);});
 }
 
+/* c4 rider mix */
 function c4(){
-  const RS=[900,1200,1500,1800,2100];
-  const files=[['STAGE1_2','--narrow',false,'STAGE1_2 (main)'],['STAGE1_1','--narrow',true,'STAGE1_1'],['STAGE1_13','--wide',false,'STAGE1_13'],['STAGE1_14','--wide',true,'STAGE1_14']];
-  const R={}; D.rb.forEach(r=>{R[`${r.file}|${r.s}|${r.k}|${r.car}`]=r;});
-  const ser=files.map(([f,c,dash,lab])=>({color:c,dash,pts:RS.map(sl=>[sl,R[`${f}|${sl}|4|false`].sn])}));
-  const info={}; D.files.forEach(x=>info[x.file.replace('.json','')]=x);
-  lines('c4',ser,25,65,10,'% saved',v=>v,sl=>`<b>slack ${mins(sl)} min · max 4</b><br>`+
-    files.map(([f])=>`${f}: −${R[`${f}|${sl}|4|false`].sn.toFixed(1)}% · ${R[`${f}|${sl}|4|false`].b} riders`).join('<br>'));
-  const s=document.getElementById('c4'); const g=s.querySelector('g');
-  txt(g,60,40,'dense: STAGE1_2 (solid), STAGE1_1 (dashed)','dlab','start',cssv('--narrow'));
-  txt(g,60,254-16,'spread: STAGE1_13 (solid), STAGE1_14 (dashed)','dlab','start',cssv('--wide'));
+  const s=document.getElementById('c4');s.textContent='';
+  const W=440,H=300,L=40,R=8,T=20,B=40;
+  const {g,Y,pw,ph}=frame(s,W,H,L,R,T,B,0,100,[0,25,50,75,100],v=>v,'orders');
+  const step=pw/4,bw=step*0.5;
+  [1,2,3,4].forEach((k,i)=>{const d=m(REF,k);let acc=0;const x=L+step*i+(step-bw)/2;
+    [['ow','--walk'],['ob','--bike'],['oc','--carm']].forEach(([key,c])=>{const v=d[key];if(!v)return;
+      g.appendChild(el('rect',{x:x,y:Y(acc+v),width:bw,height:Y(acc)-Y(acc+v)-1.5,rx:2,fill:cv(c)}));
+      if(v>=8)g.appendChild(el('text',{x:x+bw/2,y:(Y(acc)+Y(acc+v))/2+4,'text-anchor':'middle',class:'dlab',fill:'#fff'},v));acc+=v;});
+    g.appendChild(el('text',{x:x+bw/2,y:H-B+16,'text-anchor':'middle',class:'ax'},'max '+k));
+    g.appendChild(el('text',{x:x+bw/2,y:H-B+29,'text-anchor':'middle',class:'ax'},d.b+' riders'));
+    const r=el('rect',{x:L+step*i,y:T,width:step,height:ph,fill:'transparent'});
+    r.addEventListener('mousemove',ev=>showTip(ev,`<b>max ${k}</b><br>walk: ${d.w} riders, ${d.ow} orders<br>bike: ${d.bk} riders, ${d.ob} orders<br>car: ${d.cr} riders, ${d.oc} orders`));
+    r.addEventListener('mouseleave',hideTip);g.appendChild(r);});
 }
 
+/* c5 compute */
 function c5(){
-  const s=document.getElementById('c5'); s.textContent='';
-  const W=420,H=300,L=40,R=8,T=22,B=58;
-  const {g,pw,ph,Y}=frame(s,W,H,L,R,T,B,0,60,20,'% saved',v=>v);
-  const labs=[...new Set(D.fc.map(r=>r.lab))];
-  const short={'A 원본 8000/8000/6000':['Original','8k/8k/6k'],'B 균일 6000':['Uniform','6k'],'C 균일 5000':['Uniform','5k'],'D 혼합 9000/4000/5000':['Walk cheapest','9k/4k/5k']};
-  const step=pw/labs.length, bw=step*0.22;
-  labs.forEach((lab,i)=>{
-    const rows=[2,3,4].map(k=>D.fc.find(r=>r.lab===lab&&r.col===`최대 ${k}건`));
-    rows.forEach((r,j)=>{
-      const x=L+step*i+step*0.17+j*bw, y=Y(r.sn);
-      g.appendChild(el('rect',{x,y,width:bw-2,height:T+ph-y,rx:2,fill:cssv(KC[j+2])}));
-    });
-    const r4=rows[2]; txt(g,L+step*i+step*0.17+2*bw+bw/2-1,Y(r4.sn)-5,r4.sn.toFixed(0),'dlab','middle',cssv('--ink-2'));
-    const [a,b]=short[lab]||[lab,''];
-    txt(g,L+step*i+step/2,H-B+18,a,'ax'); txt(g,L+step*i+step/2,H-B+31,b,'ax');
-    const hit=el('rect',{x:L+step*i,y:T,width:step,height:ph,fill:'transparent'});
-    hit.addEventListener('mousemove',ev=>showTip(ev,`<b>fixed cost bike/walk/car: ${b||a}</b><br>`+rows.map((r,j)=>`max ${j+2}: −${r.sn.toFixed(1)}% · ${r.b} riders`).join('<br>')+
-      `<br>riders at max 4: bike ${r4.bk}, walk ${r4.w}, car ${r4.cr}`));
-    hit.addEventListener('mouseleave',hideTip); g.appendChild(hit);
-  });
-  txt(g,L+pw/2,H-8,'Rider fixed cost (bike / walk / car, won)','axl');
+  const s=document.getElementById('c5');s.textContent='';
+  const W=440,H=300,L=46,R=50,T=20,B=40;
+  const {g,Y,pw,ph}=frame(s,W,H,L,R,T,B,1,2000,[1,10,100,1000],v=>v,'seconds',true);
+  const X=v=>L+pw*(v-900)/1800;
+  xAxis(g,X,SL,H-B+16,'Slack (min)',W,H,L,pw);
+  const G=D.gen.filter(d=>d.f==='STAGE1_2').sort((a,b)=>a.s-b.s);
+  g.appendChild(el('line',{x1:L,x2:L+pw,y1:Y(100),y2:Y(100),stroke:'#d23c3c','stroke-dasharray':'5 4','stroke-width':1.3}));
+  g.appendChild(el('text',{x:L+4,y:Y(100)-5,class:'dlab',fill:'#d23c3c'},'100 s'));
+  [['t3','--k3'],['t4','--k4']].forEach(([key,c])=>{const p=G.map(d=>[X(d.s),Y(Math.max(d[key],1))]);line(g,p,cv(c),2);p.forEach(q=>dot(g,q[0],q[1],cv(c),3));});
+  const l=G[G.length-1];
+  g.appendChild(el('text',{x:X(l.s)+5,y:Y(l.t4)+4,class:'dlab',fill:cv('--k4')},Math.round(l.t4)+' s'));
+  g.appendChild(el('text',{x:X(l.s)+5,y:Y(l.t3)+4,class:'dlab',fill:cv('--k3')},l.t3.toFixed(1)+' s'));
+  G.forEach(d=>{const r=el('rect',{x:X(d.s)-pw/12,y:T,width:pw/6,height:ph,fill:'transparent'});
+    r.addEventListener('mousemove',ev=>showTip(ev,`<b>slack ${d.s/60} min</b><br>candidates: ${fmt(d.n.reduce((a,b)=>a+b,0))}<br>4-order: ${fmt(d.n[3])}<br>max 3 total: ${(d.t3+d.g3).toFixed(1)} s<br>max 4 total: ${(d.t4+d.g4).toFixed(1)} s`));
+    r.addEventListener('mouseleave',hideTip);g.appendChild(r);});
 }
 
-function table(){
-  const tb=document.getElementById('tb'); tb.innerHTML='';
-  D.main.forEach(r=>{
-    const tr=document.createElement('tr');
-    if(r.car) tr.className='base';
-    if(!r.car && r.s===1800 && r.k===4) tr.className='mark';
-    [mins(r.s)+' min', r.car?'1 · car only':r.k, fmt(r.c), r.car?'—':(r.sb<0.05?'0.0%':'−'+r.sb.toFixed(1)+'%'),
-     (r.car||r.k===1)?'—':'−'+r.sn.toFixed(1)+'%', r.b, r.bk, r.w, r.cr, r.mean.toFixed(1), r.slow.toFixed(1)]
-      .forEach(v=>{const td=document.createElement('td'); td.textContent=v; tr.appendChild(td);});
-    tb.appendChild(tr);
+/* c6 density */
+function c6(){
+  const s=document.getElementById('c6');s.textContent='';
+  const W=440,H=300,L=40,R=104,T=20,B=40;
+  const {g,Y,pw,ph}=frame(s,W,H,L,R,T,B,25,60,[30,40,50,60],v=>v+'%','saving, max 3');
+  const RS=[900,1200,1500,1800,2100];const X=v=>L+pw*(v-900)/1200;
+  xAxis(g,X,RS,H-B+16,'Slack (min)',W,H,L,pw);
+  D.files.forEach(f=>{const dense=f.d>1;const c=cv(dense?'--dense':'--sparse');
+    const p=RS.map(v=>{const r=D.rb.find(d=>d.f===f.f&&d.s===v&&d.k===3);return [X(v),Y(r.sv),r];});
+    line(g,p,c,f.f==='STAGE1_2'?2.6:1.6,f.f==='STAGE1_1'||f.f==='STAGE1_14'?'5 3':'');
+    p.forEach(q=>dot(g,q[0],q[1],c,2.8));
+    const l=p[p.length-1];g.appendChild(el('text',{x:l[0]+6,y:l[1]+(f.f==='STAGE1_2'||f.f==='STAGE1_14'?10:-2),class:'dlab',fill:c},`${f.f.replace('STAGE','S')} ${f.d.toFixed(2)}/km²`));
   });
+  RS.forEach(v=>{const r=el('rect',{x:X(v)-pw/10,y:T,width:pw/5,height:ph,fill:'transparent'});
+    r.addEventListener('mousemove',ev=>showTip(ev,`<b>slack ${v/60} min · max 3</b><br>`+D.files.map(f=>{const x=D.rb.find(d=>d.f===f.f&&d.s===v&&d.k===3);return `${f.f}: ${x.sv.toFixed(1)}% · ${x.b} riders`;}).join('<br>')));
+    r.addEventListener('mouseleave',hideTip);g.appendChild(r);});
 }
 
-function build(){c1();c2();c3();c4();c5();table();}
-build();
+/* tables */
+function tables(){
+  const FCL={A_original:['A original','8k / 8k / 6k'],B_uniform6000:['B uniform','6k / 6k / 6k'],
+             C_uniform5000:['C uniform','5k / 5k / 5k'],D_walk_cheapest:['D walk-cheap','9k / 4k / 5k']};
+  document.getElementById('fc').innerHTML=Object.keys(FCL).map(c=>{const f=k=>D.fc.find(d=>d.fc===c&&d.k===k&&!d.car);
+    return `<tr${c==='A_original'?' class="mark"':''}><td>${FCL[c][0]}</td><td>${FCL[c][1]}</td><td>${f(2).sv.toFixed(1)}%</td><td>${f(3).sv.toFixed(1)}%</td><td>${f(4).sv.toFixed(1)}%</td><td>${f(3).b}</td></tr>`;}).join('');
+  const tb=document.getElementById('tb');tb.innerHTML='';
+  SL.forEach((v,i)=>{[[1,true],[1,false],[2,false],[3,false],[4,false]].forEach(([k,car],j)=>{const d=m(v,k,car);
+    const tr=document.createElement('tr');if(v===REF&&k===HK&&!car)tr.className='mark';else if(j===0&&i>0)tr.className='gap';
+    [j===0?v/60+' min':'',car?'all-car':(k===1?'no bundling':'max '+k),fmt(d.c,2),car||k===1?'—':'−'+d.sv.toFixed(1)+'%',d.b,`${d.w}/${d.bk}/${d.cr}`,
+     fmt(d.fx),fmt(d.vr),d.ex.toFixed(1),d.slow.toFixed(1),d.mg.toFixed(1),d.late].forEach(x=>{const td=document.createElement('td');td.textContent=x;tr.appendChild(td);});
+    tb.appendChild(tr);});});
+}
+
+document.querySelectorAll('[data-m]').forEach(b=>b.addEventListener('click',()=>{MODE=b.dataset.m;
+  document.querySelectorAll('[data-m]').forEach(x=>x.setAttribute('aria-pressed',x===b));c1();}));
+
+/* scenario */
+const POL=[{n:'Keep current policy',s:1800,k:3},{n:'Reduce bundle size',s:1800,k:2},{n:'Shorten promise',s:900,k:3,best:true}];
+const BOTH={n:'Both',s:900,k:2};
+function delta(v,base,unit,dig,lowerGood=true){const d=v-base;if(Math.abs(d)<1e-9)return '<span class="d flat">current</span>';
+  const good=lowerGood?d<0:d>0;return `<span class="d ${good?'good':'bad'}">${d>0?'+':'−'}${fmt(Math.abs(d),dig)}${unit}</span>`;}
+function scenario(){
+  const cur=m(1800,3);
+  document.getElementById('pcards').innerHTML=POL.map(p=>{const d=m(p.s,p.k);const isCur=p.s===1800&&p.k===3;
+    const cell=(k,v,dl)=>`<div class="m"><div class="k">${k}</div><div class="v">${v}</div>${isCur?'<div class="d flat">current</div>':dl}</div>`;
+    return `<div class="pcard${p.best?' best':''}">${p.best?'<span class="badge">Best for complaints</span>':''}
+      <div class="hd"><span class="nm">${p.n}</span><span class="pr">cap ${p.k} · slack ${p.s/60} min</span></div>
+      <div class="row">${cell('Cost/order',fmt(d.c)+' ₩',delta(d.c,cur.c,' ₩',0))}${cell('Riders',d.b,delta(d.b,cur.b,'',0))}
+      ${cell('Avg wait',d.mean.toFixed(1)+' m',delta(d.mean,cur.mean,' m',1))}${cell('Slowest 10%',d.slow.toFixed(1)+' m',delta(d.slow,cur.slow,' m',1))}</div></div>`;}).join('');
+  const b=m(1800,2),p=m(900,3),bo=m(900,2);
+  document.getElementById('scn-note').innerHTML=`<b>Verdict.</b> Both fixes cost more than today. Shrinking bundles adds ${fmt(b.c-cur.c)} won and ${b.b-cur.b} riders per 100 orders but cuts the slowest-10% wait by only ${(cur.slow-b.slow).toFixed(1)} min. `+
+    `Shortening the promise adds ${fmt(p.c-cur.c)} won and ${p.b-cur.b} riders and cuts it by ${(cur.slow-p.slow).toFixed(1)} min. Doing both costs ${fmt(bo.c-p.c)} won more than the shorter promise alone for ${(p.slow-bo.slow).toFixed(1)} more minutes. `+
+    `The model uses almost all the slack it is given, so only a shorter promise moves the latest arrivals earlier.`;
+  c7();
+}
+function c7(){
+  const s=document.getElementById('c7');s.textContent='';
+  const W=420,H=290,L=44,R=16,T=18,B=42,cur=m(1800,3);
+  const pts=[...POL,BOTH].map(p=>{const d=m(p.s,p.k);return {p,x:d.c-cur.c,y:cur.slow-d.slow,d};});
+  const {g,Y,pw,ph}=frame(s,W,H,L,R,T,B,-1,13,[0,4,8,12],v=>v,'min cut');
+  const X=v=>L+pw*(v/1300);
+  [0,400,800,1200].forEach(v=>g.appendChild(el('text',{x:X(v),y:H-B+16,'text-anchor':'middle',class:'ax'},(v?'+':'')+fmt(v))));
+  g.appendChild(el('text',{x:L+pw/2,y:H-6,'text-anchor':'middle',class:'axl'},'Extra cost per order (won)'));
+  g.appendChild(el('text',{x:L+6,y:Y(12.6),class:'dlab',fill:cv('--ink-3')},'↖ better: cheaper, shorter wait'));
+  pts.forEach(q=>{const best=q.p.best,isCur=q.x===0;const c=best?cv('--accent'):isCur?cv('--ink-3'):q.p===BOTH?cv('--k4'):cv('--k2');
+    g.appendChild(el('circle',{cx:X(q.x),cy:Y(q.y),r:best?8:6,fill:c,stroke:cv('--surface'),'stroke-width':2}));
+    const lab=isCur?'Current':q.p.n;
+    const pos=isCur?[12,-8,'start']:q.p===BOTH?[-2,22,'end']:best?[-14,4,'end']:[0,-30,'end'];
+    g.appendChild(el('text',{x:X(q.x)+pos[0],y:Y(q.y)+pos[1],'text-anchor':pos[2],class:'dlab',fill:c},lab));
+    if(!isCur)g.appendChild(el('text',{x:X(q.x)+pos[0],y:Y(q.y)+pos[1]+14,'text-anchor':pos[2],class:'ax'},`+${fmt(q.x)} ₩ · −${q.y.toFixed(1)} min`));
+    const hit=el('circle',{cx:X(q.x),cy:Y(q.y),r:14,fill:'transparent'});
+    hit.addEventListener('mousemove',ev=>showTip(ev,`<b>${lab}</b><br>cap ${q.p.k} · slack ${q.p.s/60} min<br>${fmt(q.d.c)} won · ${q.d.b} riders<br>avg wait ${q.d.mean.toFixed(1)} min<br>slowest 10% ${q.d.slow.toFixed(1)} min`));
+    hit.addEventListener('mouseleave',hideTip);g.appendChild(hit);});
+}
+/* count-up on hero tile */
+function countUp(){const e=document.getElementById('t-hero');const target=m(REF,HK).sv;
+  if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+  const t0=performance.now();const f=t=>{const k=Math.min(1,(t-t0)/900);const v=target*(1-Math.pow(1-k,3));e.textContent='−'+v.toFixed(1)+'%';if(k<1)requestAnimationFrame(f);};requestAnimationFrame(f);}
+function build(){tiles();c1();scenario();c2();c3();c4();c5();c6();tables();explorer();}
+segs();build();countUp();
 matchMedia('(prefers-color-scheme: dark)').addEventListener('change',build);
 </script>
 </body>
